@@ -12,10 +12,11 @@
 #define DEBUG
 #define DEBUG_main
 #define DEBUG_POLICY
+//#define DEBUG_ABS
 //#define DEBUG_POSS
 //#define DEBUG_GS
 
-#define TIME_CONTROL
+//#define TIME_CONTROL
 
 
 
@@ -24,6 +25,8 @@ using namespace std;
 extern int MAX_DEPTH ;
 extern int keepLen ;
 extern int range ;
+extern int MAX_VCT_DEPTH;
+extern int MAX_VCF_DEPTH;
 
 //开局设置
 extern int step_INIT ;
@@ -58,8 +61,11 @@ extern int timepos1 ;
 extern int timetos ;
 extern int timetos4 ;
 extern int timetemp ;
+extern int timeshape;
+extern int timeshape4;
 
-
+extern int reachMaxDepth;
+extern int searchNode;
 
 //进攻
 extern const vector<string> shaps_win ;

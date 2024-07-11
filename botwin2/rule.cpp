@@ -126,6 +126,10 @@ void btzrule() {
 	cout << "timepos1=" << timepos1 << endl;
 
 	cout << "timetemp=" << timetemp << endl;
+
+	cout << "search node:" << searchNode << endl;
+	cout << "max depth:" << reachMaxDepth << endl;
+	cout << "nps:" << searchNode * 1000.0/ (clock() - t)  << endl;
 #endif // DEBUG_main
 	return;
 }

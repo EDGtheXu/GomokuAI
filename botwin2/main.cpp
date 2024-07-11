@@ -1,6 +1,6 @@
 #include <memory.h>
 
-
+#include "config.h"
 #include "rule.h"
 #include "evaluate.h"
 
@@ -48,6 +48,11 @@ int main()
 
 	btzrule();
 
+#ifdef DEBUG
 
+#endif // DEBUG
+
+	cout << "timeshape=" << timeshape << endl;
+	cout << "timeshape4=" << timeshape4 << endl;
 	return 0;
 }

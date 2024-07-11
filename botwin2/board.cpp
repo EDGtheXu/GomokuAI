@@ -15,6 +15,7 @@ board::board(const board& b)
 board::board(int chess[][15]) {
 	memcpy(this->chess, chess, sizeof(this->chess));
 }
+
 // 重载输出
 ostream& operator<<(ostream& os, const board& b)
 {
@@ -169,7 +170,7 @@ int board::getAllPossiblePos(playerEnum p, int depth, pair<int, int>* res, int* 
 	}
 
 
-
+	//我方有4提前赢
 	if (_v0[0] || _v0[1]) {
 		for (int i = 0; i < 15; i++) {
 			for (int j = 0; j < 15; j++) {
@@ -188,10 +189,33 @@ int board::getAllPossiblePos(playerEnum p, int depth, pair<int, int>* res, int* 
 			}
 		}
 	}
+	//对方有冲四必须堵
+	if (v0[1]) {
+		int count = 0;
+		for (int i = 0; i < 15; i++) {
+			for (int j = 0; j < 15; j++) {
+				if (!chess[i][j] && nb[i][j]) {
+					pair<int, int> np = pair<int, int>(i, j);
+					curb->chess[i][j] = playerEnum::ME;
+
+					if (curb->isWin(playerEnum::ME, np)) {
+						res[0] = np;
+						delete nbb;
+						delete nbb2;
+						return 1;
+					}
+					curb->chess[i][j] = 0;
+				}
+			}
+		}
+	}
+
+
 #ifdef DEBUG_main
 	timetemp += clock() - t;
 #endif
 
+	//逐个估值
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
 			if (!chess[i][j] && nb[i][j]) {
@@ -289,8 +313,8 @@ int board::getAllPossiblePos(playerEnum p, int depth, pair<int, int>* res, int* 
 				res[mi].second = temp3;
 			}
 
+			}
 		}
-	}
 
 	/*//冒泡排序
 	if (index > 0) {
@@ -323,55 +347,7 @@ int board::getAllPossiblePos(playerEnum p, int depth, pair<int, int>* res, int* 
 	timepos += clock() - t;
 #endif
 	return min;
-}
-pair<int, int> board::lose() {
-	int sortv[150]{ 0 };
-	int index = 0;
-
-	int nb[15][15]{ 0 };
-	for (int i = 0; i < ROW; i++) {
-		for (int j = 0; j < COL; j++) {
-			if (chess[i][j] != 0) {
-				for (int ii = i - range; ii <= i + range; ii++) {
-					for (int jj = j - range; jj <= j + range; jj++) {
-						if (ii >= 0 && ii < ROW && jj >= 0 && jj < COL) nb[ii][jj] += 1;
-					}
-				}
-			}
-		}
 	}
-	int best = MAX_INT;
-	board* nbb2 = this->reverse();
-	pair<int, int> pos = pair<int, int>(0, 0);
-	int v0[7]{ 0 };
-	int _v0[7]{ 0 };
-	nbb2->getShapes(v0, _v0);
-	for (int i = 0; i < ROW; i++) {
-		for (int j = 0; j < COL; j++) {
-			if (!chess[i][j] && nb[i][j]) {
-				pair<int, int> np = pair<int, int>(i, j);
-
-				/*
-				nbb->chess[i][j] = p;
-				if (nbb->isWin(p,np)) {
-					res[0] = np;
-					delete nbb;
-					delete nbb2;
-					return 1;
-				}
-				nbb->chess[i][j] = 0;
-				*/
-				int value;
-				value = nbb2->getScoreLose(np, v0, _v0);
-				if (value < best) {
-					pos = pair<int, int>(i, j);
-					best = value;
-				}
-			}
-		}
-	}
-	return pos;
-}
 int board::getAllPossiblePos0(playerEnum p, int depth, pair<int, int>* res, int* w) {
 #ifdef DEBUG_main
 	int t = clock();
@@ -785,43 +761,174 @@ int board::toString4(char* strs[], pair<int, int>& pos) {
 
 
 
-int board::abSearch(playerEnum p, int depth, int alpha, int beta)
+int board::abSearch(playerEnum p, int depth, int alpha, int beta, int maxdept)
 {
+#ifdef DEBUG_ABS
+	cout << *this << endl;
+#endif // DEBUG_ABS
 
-	if (depth == MAX_DEPTH - 1) {
+#ifdef DEBUG
+	reachMaxDepth = max(reachMaxDepth, maxdept);
+	searchNode++;
+#endif // DEBUG
 
-		//cout << "v = " << maxv << endl;
-		//cout << "p = " << p << endl;
-		//cout << *this << endl;
 
-		pair<int, int>poss[150];
-		int count = getAllPossiblePos1(p, depth, poss);
-		board* nbb = this->reverse();
-		int v0[7]{ 0 };
-		int _v0[7]{ 0 };
-		nbb->getShapes(v0, _v0);
-		//int min = MAX_INT;
-		int max = MIN_INT;
-		int rc = 0;
-		while (count--) {
-			nbb->chess[poss[rc].first][poss[rc].second] = -(int)p;
-			if (isWin(p, poss[rc])) { this->chess[poss[rc].first][poss[rc].second] = 0; return ((int)p) * MAX_INT; }
-			nbb->chess[poss[rc].first][poss[rc].second] = 0;
-			int t = -nbb->getScoreP(poss[rc], v0, _v0);
+	//到最深层 
+	if (depth == maxdept - 1) {
 
-			max = t > max ? t : max; alpha = max > alpha ? max : alpha;
-			if (alpha >= beta) {
+		if (depth % 2 == 0) {//我方
+			pair<int, int>poss[150];
+			int w = 0;
+			int count = getAllPossiblePos(p, depth, poss, &w);
+			if (w) return (int)p * MAX_INT;
+
+			
+			if (count <= 6 && depth <= MAX_VCT_DEPTH   || 
+				count == 1 && depth <= MAX_VCF_DEPTH
+				) {//防守方守冲四活三，扩展2层
+
+				int max = MIN_INT;
+				int rc = 0;
+				while (count--)
+				{
+					chess[poss[rc].first][poss[rc].second] = p;
+
+					int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept + 2);
+					chess[poss[rc].first][poss[rc].second] = 0;
+					max = t > max ? t : max; alpha = max > alpha ? max : alpha;
+					if (alpha >= beta) {
+						return max;
+					}
+					rc++;
+				}
 				return max;
 			}
-			rc++;
-		}
-		return max;
-	}
-	int* w = new int(0);
-	pair<int, int>poss[150];
-	int count = getAllPossiblePos(p, depth, poss, w);
+			else {//估值
+				board* nbb = this->reverse();
+				int v0[7]{ 0 };
+				int _v0[7]{ 0 };
+				nbb->getShapes(v0, _v0);
+				//int min = MAX_INT;
+				int max = MIN_INT;
+				int rc = 0;
+				while (count--) {
 
-	if (*w) return (int)p * MAX_INT;
+					nbb->chess[poss[rc].first][poss[rc].second] = -(int)p;
+					chess[poss[rc].first][poss[rc].second] = p;
+					if (isWin(p, poss[rc])) { this->chess[poss[rc].first][poss[rc].second] = 0; return ((int)p) * MAX_INT; }
+
+					int t;
+
+
+					//进攻方走冲四活三，扩展1层
+					int v[7]{ 0 };
+					int _v[7]{ 0 };
+					getShapes4(poss[rc], v, _v);
+					if (_v[1] && depth <= MAX_VCT_DEPTH) {
+						t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept + 1);
+						nbb->chess[poss[rc].first][poss[rc].second] = 0;
+						chess[poss[rc].first][poss[rc].second] = 0;
+					}
+					else {
+						nbb->chess[poss[rc].first][poss[rc].second] = 0;
+						chess[poss[rc].first][poss[rc].second] = 0;
+						t = -nbb->getScoreP(poss[rc], v0, _v0);
+					}
+
+
+					max = t > max ? t : max; alpha = max > alpha ? max : alpha;
+					if (alpha >= beta) {
+						return max;
+					}
+					rc++;
+				}
+				return max;
+			}
+
+
+		}
+		else {//对方
+			pair<int, int>poss[150];
+			int w = 0;
+			int count = getAllPossiblePos(p, depth, poss, &w);
+			if (w) return (int)p * MAX_INT;
+			if (count <= 6 && depth <= MAX_VCT_DEPTH ||
+				count == 1 && depth <= MAX_VCF_DEPTH
+				) {//防守方守冲四活三，扩展2层
+				int rc = 0;
+				int min = MAX_INT;
+				while (count--) {
+					chess[poss[rc].first][poss[rc].second] = p;
+					int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept + 2);
+					chess[poss[rc].first][poss[rc].second] = 0;
+
+
+					min = t < min ? t : min;
+					beta = min < beta ? min : beta;
+					if (beta <= alpha) {
+
+						return min;
+					}
+					rc++;
+				}
+				return min;
+
+			}
+			else {//估值
+				int v0[7]{ 0 };
+				int _v0[7]{ 0 };
+				getShapes(v0, _v0);
+
+				int min = MAX_INT;
+				int rc = 0;
+				while (count--) {
+					chess[poss[rc].first][poss[rc].second] = p;
+					if (isWin(p, poss[rc])) { this->chess[poss[rc].first][poss[rc].second] = 0; return ((int)p) * MAX_INT; }
+					
+					int t;
+					//进攻方走冲四活三，扩展1层
+					int v[7]{ 0 };
+					int _v[7]{ 0 };
+					getShapes4(poss[rc], v, _v);
+					//cout << *this << endl;
+					if (_v[1] && depth <= MAX_VCT_DEPTH) {
+						t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept + 1);
+						chess[poss[rc].first][poss[rc].second] = 0;
+					}
+					else {
+						chess[poss[rc].first][poss[rc].second] = 0;
+						t = getScoreP(poss[rc], v0, _v0);
+					}
+					
+
+					min = t < min ? t : min;
+					beta = min < beta ? min : beta;
+					if (beta <= alpha) {
+
+						return min;
+					}
+					rc++;
+				}
+				return min;
+			}
+		}
+	}
+
+
+
+
+
+
+
+
+	//中间层
+
+	int w = 0;
+	pair<int, int>poss[150];
+	int count = getAllPossiblePos(p, depth, poss, &w);
+
+	if (w==1)
+		return (int)p * MAX_INT;
 	//if (count == 1) depth -= 2;
 	if (count == 0)
 		if (p == 1)return MIN_INT;
@@ -830,28 +937,19 @@ int board::abSearch(playerEnum p, int depth, int alpha, int beta)
 
 
 
-
 	int rc = 0;
 	if (p == 1) {
 		int max = MIN_INT;
 		while (count--) {
-
-
-
-			int x = poss[rc].first;
-			int y = poss[rc].second;
-
-			//if (depth == 2 && x == 4 && y == 9) {
-			//	cout << *this << endl;
-			//	cout << 512 << endl;
+			//if (depth == 4 && rc == 0&&poss[0].first==1&&poss[0].second==6) {
+			//	cout << "2 7" << endl;
 			//}
-
-
-
-
 			this->chess[poss[rc].first][poss[rc].second] = p;
 			//if (isWin(p, poss[rc])) { this->chess[poss[rc].first][poss[rc].second] = 0; return ((int)p) * MAX_INT; }
-			int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta);
+
+			int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept);
+
+			
 
 			this->chess[poss[rc].first][poss[rc].second] = 0;
 			max = t > max ? t : max; alpha = max > alpha ? max : alpha;
@@ -870,11 +968,10 @@ int board::abSearch(playerEnum p, int depth, int alpha, int beta)
 		int min = MAX_INT;
 		while (count--) {
 
-
-
 			this->chess[poss[rc].first][poss[rc].second] = p;
 			//if (isWin(p, poss[rc])) { this->chess[poss[rc].first][poss[rc].second] = 0; return ((int)p) * MAX_INT; }
-			int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta);
+
+			int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept);
 
 			this->chess[poss[rc].first][poss[rc].second] = 0;
 			min = t < min ? t : min;
@@ -905,7 +1002,7 @@ pair<int, int> board::policy(playerEnum p)
 	strTree::initRoots();
 	int* w = new int(0);
 	pair<int, int> poss[150];
-	int count = getAllPossiblePos0(p, 0, poss, w);
+	int count = getAllPossiblePos(p, 0, poss, w);
 	if (*w) return poss[0];
 	else if (count == 0) {
 
@@ -918,36 +1015,40 @@ pair<int, int> board::policy(playerEnum p)
 	int maxv = -MIN_INT * 2;
 
 	int rc = 0;
+	range = 1;//重设置range
 	while (count--) {
 
+#ifdef DEBUG_POLICY
+		int steptime = clock();
+#endif // DEBUG_POLICY
 
-
-
-
+		
 		this->chess[poss[rc].first][poss[rc].second] = p;
 
+
 #ifdef DEBUG_POLICY
-
-
 		int x = poss[rc].first;
 		int y = poss[rc].second;
-		//if (x == 5 && y == 2)
+		//if (x == 4 && y == 8)
 		//{
-		//	cout << *this << endl;
-		//	cout << "pol:" << x << ' ' << y << endl;
+			cout << *this << endl;
+			cout << "pol:" << x << ' ' << y << endl;
 		//}
 #endif // DEBUG_POLICY
 
-		int t = abSearch((playerEnum)(-(int)p), 1, curmax, MAX_INT);
-
-#ifdef TIME_CONTROL
-		if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) {
-			this->chess[poss[rc].first][poss[rc].second] = 0;
-			break;
-		}
-#endif
-
+		int t = abSearch((playerEnum)(-(int)p), 1, MIN_INT, MAX_INT, MAX_DEPTH);
 		this->chess[poss[rc].first][poss[rc].second] = 0;
+
+
+
+
+#ifdef DEBUG_POLICY
+		cout << "step time:"<< clock()-steptime<< endl;
+#endif // DEBUG_POLICY
+#ifdef TIME_CONTROL
+		if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) break;
+#endif
+		
 		if (t > curmax)
 		{
 			curmax = t;
@@ -958,7 +1059,7 @@ pair<int, int> board::policy(playerEnum p)
 	}
 #ifdef DEBUG_POLICY
 	cout << "maxv = " << curmax << endl;
-
+	cout << "rc = " << rc << endl;
 #endif // DEBUG_POLICY
 
 	//cout<<"time1:"<<time1<<endl;
@@ -968,20 +1069,23 @@ pair<int, int> board::policy(playerEnum p)
 }
 
 void board::getShapes(int* v, int* _v) {
+	int t = clock();
 	char* strs[88]{ 0 };
 	int count = toString(strs);
 	//读取树
 	strTree::readTree(tree1, strs, count, v);
 	strTree::readTree(tree2, strs, count, _v);
-
+	timeshape += clock() - t;
 }
 
 void board::getShapes4(pair<int, int>& pos, int* v, int* _v) {
+	int t = clock();
 	char* strs[4]{ 0 };
 	toString4(strs, pos);
 	//读取树
 	strTree::readTree(tree1, strs, 4, v);
 	strTree::readTree(tree2, strs, 4, _v);
+	timeshape4 += clock() - t;
 }
 
 int board::getScoreP(pair<int, int>& pos, int v0[7], int _v0[7]) {
@@ -1014,6 +1118,8 @@ int board::getScoreP(pair<int, int>& pos, int v0[7], int _v0[7]) {
 	int change3 = _v2[2] - _v[2];
 
 	int change4 = _v2[1] - _v[1];
+
+	int change34 = v[3] + v[4] - _v2[4] - v2[3];
 	//整体
 	int v3[7]{ 0 };
 	int _v3[7]{ 0 };
@@ -1032,25 +1138,29 @@ int board::getScoreP(pair<int, int>& pos, int v0[7], int _v0[7]) {
 		//cout << *this << endl; 
 		return MIN_INT / 10;
 	}//对方活4
-	else if ((change3 + change4) > 1 && (change4) && (!v3[2]) && (!v3[3])) {
+	else if ((change3 + change4) > 1 && (change4)) {
+		if ((!v3[2]) && (!v3[3])) return MIN_INT;
+		return -50000;
 		//cout << "对方34 " << pos.first << ',' << pos.second<< endl;
 		//cout << change3 << ' ' << change4 << endl;
 		//
 		//cout << *this << endl;
-		return MIN_INT;
+
 	} //对方34
 	else if (v3[2] && (!_v3[1])) {
 		//cout << "我方活三 " << pos.first << ',' << pos.second << endl;
 		//cout << *this << endl;
 		return MAX_INT / 2;
 	}//我方活三
-	else if ((change3 > 1) && (!v3[3])) {
+	else if ((change3 > 1)) {
+		if ((!v3[3])) return MIN_INT / 10;
 		/*	cout << "对方双活三 " << pos.first << ',' << pos.second << endl;
 			cout << *this << endl; */
-		return MIN_INT / 10;
+		return -50000;
 	} //对方双活三
 
 	int score = strTree::getScoreG(v3, _v3);
+	if (change34 > 1) score -= 6666;
 	return score;
 }
 
@@ -1147,4 +1257,53 @@ int board::getScoreLose(pair<int, int>& pos, int v0[7], int _v0[7]) {
 	score += strTree::getScoreG(v3, _v3);
 	if (change34 > 1) score -= 6666;
 	return score;
+}
+
+pair<int, int> board::lose() {
+	int sortv[150]{ 0 };
+	int index = 0;
+
+	int nb[15][15]{ 0 };
+	for (int i = 0; i < ROW; i++) {
+		for (int j = 0; j < COL; j++) {
+			if (chess[i][j] != 0) {
+				for (int ii = i - range; ii <= i + range; ii++) {
+					for (int jj = j - range; jj <= j + range; jj++) {
+						if (ii >= 0 && ii < ROW && jj >= 0 && jj < COL) nb[ii][jj] += 1;
+					}
+				}
+			}
+		}
+	}
+	int best = MAX_INT;
+	board* nbb2 = this->reverse();
+	pair<int, int> pos = pair<int, int>(0, 0);
+	int v0[7]{ 0 };
+	int _v0[7]{ 0 };
+	nbb2->getShapes(v0, _v0);
+	for (int i = 0; i < ROW; i++) {
+		for (int j = 0; j < COL; j++) {
+			if (!chess[i][j] && nb[i][j]) {
+				pair<int, int> np = pair<int, int>(i, j);
+
+				/*
+				nbb->chess[i][j] = p;
+				if (nbb->isWin(p,np)) {
+					res[0] = np;
+					delete nbb;
+					delete nbb2;
+					return 1;
+				}
+				nbb->chess[i][j] = 0;
+				*/
+				int value;
+				value = nbb2->getScoreLose(np, v0, _v0);
+				if (value < best) {
+					pos = pair<int, int>(i, j);
+					best = value;
+				}
+			}
+		}
+	}
+	return pos;
 }

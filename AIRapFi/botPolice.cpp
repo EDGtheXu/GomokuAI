@@ -15,7 +15,7 @@ using namespace std;
 //#define DEBUG_POSS
 //#define DEBUG_GS
 
-#define TIME_CONTROL
+//#define TIME_CONTROL
 
 //◊‹ÃÂ…Ë÷√
 int MAX_DEPTH = 7;
