@@ -1,14 +1,14 @@
 #include"config.h"
 
 //总体设置
-int MAX_DEPTH = 4;
-int keepLen = 20;
-int range = 2;//第一层range
-int MAX_VCT_DEPTH = 4;//VCT可扩展层数
-int MAX_VCF_DEPTH = 11;//VCF可扩展层数
+int MAX_DEPTH = 7;
+int keepLen = 15;
+int range = 2;
+int MAX_VCT_DEPTH = 9;//VCT可扩展层数
+int MAX_VCF_DEPTH = 12;//VCF可扩展层数
 
 //开局设置
-int step_INIT = 2;
+int step_INIT = -1;
 int MAX_DEPTH_INIT = 2;
 int keepLen_INIT = 13;
 int range_INIT = 2;
@@ -45,6 +45,7 @@ int timeshape4 = 0;
 
 int reachMaxDepth=0;
 int searchNode = 0;
+int testCount = 0;
 
 //进攻
 const vector<string> shaps_win = { "11111" };

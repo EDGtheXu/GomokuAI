@@ -77,11 +77,11 @@ inline long getTime() {
 
 
 #ifdef _DEBUG
-#define DEBUGL(message) //cout << message << endl
-#define MESSAGEL(message) //cout << message << endl
+#define DEBUGL(message) cout << message << endl
+#define MESSAGEL(message) cout << message << endl
 #define MESSAGES_BEGIN 
-#define MESSAGES(message) //cout << message
-#define MESSAGES_END //cout << endl
+#define MESSAGES(message) cout << message
+#define MESSAGES_END cout << endl
 #define ANALYSIS(type, pos) ((void) 0)
 #else
 #define DEBUGL(message)

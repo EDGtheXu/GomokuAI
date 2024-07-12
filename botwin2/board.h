@@ -18,6 +18,11 @@ public:
 private:
 
 public:
+	int lastValue;
+	int lastRc;
+
+
+
 	board();
 	board(const board& b);
 	board(int chess[][15]);

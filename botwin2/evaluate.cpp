@@ -19,7 +19,7 @@ int strTree::readTree(strTree* root, char* strs[], int count, int v[7])
 	return c;
 }
 /*获取单行棋型*/
-int strTree::get(char* str, int v[7]) {
+int strTree::get(const char* str, int v[7]) {
 	strTree* root = this;
 	int count = 0;
 	int back = 0;
@@ -224,3 +224,7 @@ strTree::~strTree()
 	if (m) delete m;
 	if (r) delete r;
 }
+
+
+
+

@@ -110,6 +110,14 @@ void btzrule() {
 	cout << p.first << ' ' << p.second << endl;
 
 
+
+#ifdef DEBUG_BOTZONE
+	cout << "rc:" << mb->lastRc << endl;
+	cout << "value:" << mb->lastValue << endl;
+	cout << "time:"<<clock() - t << endl;
+#endif // DEBUG_BOTZONE
+
+
 #ifdef DEBUG_main
 
 
@@ -130,6 +138,12 @@ void btzrule() {
 	cout << "search node:" << searchNode << endl;
 	cout << "max depth:" << reachMaxDepth << endl;
 	cout << "nps:" << searchNode * 1000.0/ (clock() - t)  << endl;
+
+	cout << "timeshape=" << timeshape << endl;
+	cout << "timeshape4=" << timeshape4 << endl;
+	cout << "shape4Count=" << testCount << endl;
 #endif // DEBUG_main
+
+
 	return;
 }

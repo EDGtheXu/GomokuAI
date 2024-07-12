@@ -4,7 +4,7 @@
 
 
 
-
+#include <cstring>
 #include <iostream>
 #include <time.h>
 #include <vector>
@@ -14,8 +14,10 @@
 #define DEBUG_POLICY
 //#define DEBUG_ABS
 //#define DEBUG_POSS
-//#define DEBUG_GS
 
+
+
+//#define DEBUG_BOTZONE
 //#define TIME_CONTROL
 
 
@@ -66,6 +68,7 @@ extern int timeshape4;
 
 extern int reachMaxDepth;
 extern int searchNode;
+extern int testCount;
 
 //½ø¹¥
 extern const vector<string> shaps_win ;

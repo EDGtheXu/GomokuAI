@@ -8,6 +8,7 @@
 
 #include<vector>
 #include<string>
+#include<unordered_map>
 using namespace std;
 
 
@@ -25,7 +26,7 @@ public:
 	strTree* r;
 
 	strTree(int v, char ch);
-	int get(char* str, int v[7]);
+	int get(const char* str, int v[7]);
 
 
 
@@ -44,6 +45,8 @@ public:
 /*È«¾ÖµĞÎÒ×ÖµäÊ÷*/
 extern strTree* tree1;
 extern strTree* tree2;
+
+
 
 
 

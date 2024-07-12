@@ -205,7 +205,7 @@ void pipeLoop() {
 	}
 }
 
-int Main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 	bool customConfigPath = false;
 	if (argc > 1) {
 		char path[MAX_PATH];
@@ -258,7 +258,7 @@ int Main(int argc, char* argv[]) {
 			}
 		} while (!board.isEmpty(p));
 		ai.makeMove(p);
-		//ai.trace(cout);
+		ai.trace(cout);
 		if (board.checkWin()) {
 			cout << board.getPlayerWon() << "Ê¤Àû!" << endl;
 			break;

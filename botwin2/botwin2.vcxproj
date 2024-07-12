@@ -116,6 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,6 +131,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="board.cpp" />
+    <ClCompile Include="hashTable.cpp" />
     <ClCompile Include="rule.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="evaluate.cpp" />
@@ -150,6 +153,7 @@
     <ClInclude Include="board.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="evaluate.h" />
+    <ClInclude Include="hashTable.h" />
     <ClInclude Include="rule.h" />
     <ClInclude Include="search.h" />
   </ItemGroup>

@@ -1,6 +1,7 @@
 #include "board.h"
 #include "config.h"
 #include "evaluate.h"
+#include "hashTable.h"
 
 
 board::board()
@@ -1000,6 +1001,8 @@ int board::abSearch(playerEnum p, int depth, int alpha, int beta, int maxdept)
 pair<int, int> board::policy(playerEnum p)
 {
 	strTree::initRoots();
+	//shapeHashTable.init();
+
 	int* w = new int(0);
 	pair<int, int> poss[150];
 	int count = getAllPossiblePos(p, 0, poss, w);
@@ -1032,17 +1035,19 @@ pair<int, int> board::policy(playerEnum p)
 		//if (x == 4 && y == 8)
 		//{
 			cout << *this << endl;
-			cout << "pol:" << x << ' ' << y << endl;
+
 		//}
 #endif // DEBUG_POLICY
 
-		int t = abSearch((playerEnum)(-(int)p), 1, MIN_INT, MAX_INT, MAX_DEPTH);
+		int t = abSearch((playerEnum)(-(int)p), 1, curmax, MAX_INT, MAX_DEPTH);
 		this->chess[poss[rc].first][poss[rc].second] = 0;
 
 
 
 
 #ifdef DEBUG_POLICY
+		cout << "pol:" << x << ' ' << y << endl;
+		cout << "value:" <<t<<endl;
 		cout << "step time:"<< clock()-steptime<< endl;
 #endif // DEBUG_POLICY
 #ifdef TIME_CONTROL
@@ -1054,8 +1059,10 @@ pair<int, int> board::policy(playerEnum p)
 			curmax = t;
 			best = poss[rc];
 			maxv = t;
+			lastValue = t;
 		}
 		rc++;
+		lastRc = rc;
 	}
 #ifdef DEBUG_POLICY
 	cout << "maxv = " << curmax << endl;
@@ -1063,8 +1070,9 @@ pair<int, int> board::policy(playerEnum p)
 #endif // DEBUG_POLICY
 
 	//cout<<"time1:"<<time1<<endl;
-	delete tree1;
-	delete tree2;
+
+
+
 	return best;
 }
 
@@ -1073,8 +1081,19 @@ void board::getShapes(int* v, int* _v) {
 	char* strs[88]{ 0 };
 	int count = toString(strs);
 	//读取树
+
+	for (int i = 0;i < 88;i++) {
+		if (!strs[i])continue;
+		int** vv = shapeHashTable.getShape(strs[i]);
+		for (int i = 0;i < 7;i++) {
+			v[i] += vv[0][i];
+			_v[i] += vv[1][i];
+		}
+	}
+	/*
 	strTree::readTree(tree1, strs, count, v);
 	strTree::readTree(tree2, strs, count, _v);
+	*/
 	timeshape += clock() - t;
 }
 
@@ -1082,13 +1101,33 @@ void board::getShapes4(pair<int, int>& pos, int* v, int* _v) {
 	int t = clock();
 	char* strs[4]{ 0 };
 	toString4(strs, pos);
-	//读取树
+//读取树
+	for (int i = 0;i < 4;i++) {
+		if (!strs[i])continue;
+		int** vv = shapeHashTable.getShape(strs[i]);
+		for (int i = 0;i < 7;i++) {
+			v[i] += vv[0][i];
+			_v[i] += vv[1][i];
+		}
+	}
+
+	/*
+	char nnstr[100]{ 0 };
+	strcat(nnstr, strs[1]);
+	string nstr = string(strs[0]).append("2").append(strs[1]).append("2").append(strs[2]).append("2").append(strs[3]);
+	shapeHT.hm.insert(make_pair(nstr, nullptr));
+	testCount++;
+	*/
+
+	/*
 	strTree::readTree(tree1, strs, 4, v);
 	strTree::readTree(tree2, strs, 4, _v);
+	*/
 	timeshape4 += clock() - t;
 }
 
 int board::getScoreP(pair<int, int>& pos, int v0[7], int _v0[7]) {
+
 #ifdef DEBUG_main
 	int t = clock();
 #endif
@@ -1106,6 +1145,11 @@ int board::getScoreP(pair<int, int>& pos, int v0[7], int _v0[7]) {
 	getShapes4(pos, v, _v);
 
 	chess[pos.first][pos.second] = -1;
+
+
+
+
+
 
 	//后
 	int v2[7]{ 0 };

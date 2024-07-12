@@ -838,7 +838,7 @@ void Evaluator::trace(ostream & ss, const string & appendBefore) {
 		ss << char(y + 65) << " ";
 	}
 
-	/*
+	
 
 	ss << endl << appendBefore << "---Score-------------" << endl << appendBefore;
 	FOR_EVERY_POSITION(x, y) {
@@ -914,6 +914,6 @@ void Evaluator::trace(ostream & ss, const string & appendBefore) {
 	ss << endl << appendBefore;
 	ss << "===============================" << endl;
 
-	*/
+	
 }
 

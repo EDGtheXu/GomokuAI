@@ -250,7 +250,7 @@ int readTree(strTree* root, int* strs[], int count, int v[7]);
 void initRoots();
 void btzPolicy();
 int getScoreG(int* v, int* _v);
-int main()
+int Main()
 {
 
 	initRoots();
