@@ -1,11 +1,11 @@
 #include"config.h"
 
 //总体设置
-int MAX_DEPTH = 7;
-int keepLen = 15;
+int MAX_DEPTH = 4;
+int keepLen = 20;
 int range = 2;
-int MAX_VCT_DEPTH = 9;//VCT可扩展层数
-int MAX_VCF_DEPTH = 12;//VCF可扩展层数
+int MAX_VCT_DEPTH = 5;//VCT可扩展层数
+int MAX_VCF_DEPTH = 15;//VCF可扩展层数
 
 //开局设置
 int step_INIT = -1;

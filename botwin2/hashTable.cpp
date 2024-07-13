@@ -1,5 +1,20 @@
 #include "hashTable.h"
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 hashTable::hashTable()
 {
     HashTable = new item * [tableSize];

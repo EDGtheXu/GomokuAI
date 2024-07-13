@@ -9,7 +9,7 @@
 int main()
 {
 
-	/*
+	
 	int arr[15][15]{
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -29,78 +29,26 @@ int main()
 	};
 	board* mb = new board(arr);
 
-	*/
-
-
-
-	/*
-	//mb = mb->reverse();
-	cout << *mb << endl;
-
+	strTree::initRoots();
 
 	int v[7]{ 0 };
 	int _v[7]{ 0 };
-	pair<int, int> pqos =pair<int,int>(1, 1);
 	mb->getShapes(v, _v);
-	mb->getScoreP(pqos,v,_v);
+	pair<int, int> p(7, 7);
 
-
-
-	pair<int, int> pos = mb->policy(playerEnum::ME);
-	cout << pos.first << ' ' << pos.second << endl;
-
-
-	*/
-
-	/*
-int tttt = clock();
-	strTree::initRoots();
-	hashTable ht;
-	ht.init();
-
-	cout << ht.getsize() << endl;
-cout << "tttt=" << clock() - tttt << endl;
-
-	char str[16] = "010111/0";
-	int**vv = ht.getShape(str);
-	for (int i = 0;i < 7;i++)
-		cout << vv[0][i] << " " ;
-	cout << endl;
-	for (int i = 0;i < 7;i++)
-		cout << vv[1][i] << " ";
-	cout <<endl<< ht.getstate() << endl;
-
-
-	char str2[16] = "010///010";
-	vv = ht.getShape(str2);
-	for (int i = 0;i < 7;i++)
-		cout << vv[0][i] << " ";
-	cout << endl;
-	for (int i = 0;i < 7;i++)
-		cout << vv[1][i] << " ";
-	cout << endl << ht.getstate() << endl;
-
-
-	hash<string> h;
-	tttt = clock();
-	for (int i = 850000;i > 0;i--) {
-		//ht.getShape(str);
-		
-	}
-	cout << "tttt=" << clock() - tttt << endl;
-
-
-	tttt = clock();
-	int  v[7]{ 0 };
-	int _v[7]{ 0 };
-	pair<int, int>pos(7,7);
+	int tttt=clock();
 	char* strs[4];
-	for (int i = 850000;i > 0;i--) {
-		//mb->getShapes4(pos, v, _v);
-		mb->toString4(strs, pos);
+	
+	char str[16] = "010011//01/1110";
+	for (int i = 0;i < 850000;i++) {
+		//mb->getShapes4(p, v, _v);
+		mb->toString4(strs, p);
+		//tree1->get(str, v);
 	}
-	cout << "tttt=" << clock() - tttt << endl;
-	*/
+		
+	cout << clock() - tttt;
+		return 0;
+
 
 
 	btzrule();

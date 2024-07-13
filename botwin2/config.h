@@ -106,5 +106,10 @@ enum playerEnum
 	OPPO = -1
 };
 
+enum shapeEnum {
+	WIN = 0, H4C4, H3, C3, H2, M2, H1, 
+	_H4 = 0, _C4, _H3, _C3, _H2, _M2, _H1,
+};
+
 
 #endif // !CONFIG

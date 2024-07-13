@@ -92,7 +92,7 @@ int strTree::getScoreG(int* v, int* _v) {
 #ifdef DEBUG_main
 	int t = clock();
 #endif
-	//p=ME:计算我方权值，下一步对方
+
 	const int* values = nullptr, * _values = nullptr;
 
 	values = VALUE_DEFAULT;
