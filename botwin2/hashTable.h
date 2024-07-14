@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
+#include "config.h"
 #include "evaluate.h"
 
 using namespace std;
@@ -12,15 +13,14 @@ using namespace std;
 template <typename K,typename V>
 class basehashTable
 {
-private:
+protected:
     struct item
     {
         K key;
         V value;
         item* next;
 
-        item() : key(nullptr), value(nullptr), next(nullptr) {}
-        item(K k, V v,size_t size) : key(k), value(v), next(nullptr),tableSize(size) {}
+        item(K k, V v) : key(k), value(v), next(nullptr){}
     };
     const int tableSize;  // 存储量可改变
     item** HashTable;
@@ -29,21 +29,19 @@ private:
 
 
 public:
-    virtual int hashFunction(K str);//哈希函数
-    virtual void PrintTable();
-    virtual void PrintItemsInIndex(int index);
 
-    basehashTable() {
+//哈希公用方法
+    inline basehashTable(int s) :tableSize(s) {
 
         HashTable = new item * [tableSize];
         for (int i = 0; i < tableSize; ++i)
-            HashTable[i] = new item();
+            HashTable[i] = new item(keyNull(),valueNull());
         state = -1;
         size = 0;
 
     }
-    ~basehashTable();
-    void AddItem(K str, V vv) {
+    inline virtual ~basehashTable() {};
+    inline void AddItem(K str, V vv) {
         int index = hashFunction(str);
 
         if (keyEmpty(HashTable[index]->key))
@@ -68,52 +66,7 @@ public:
             p->next = n;
         }
     }
-    int NumberOfItemsInIndex(int index)
-    {
-        int count = 0;
-        if (keyEmpty( HashTable[index]->key))
-        {
-            return count;
-        }
-        else
-        {
-            count++;
-            item* p = HashTable[index];
-            while (p->next != nullptr)
-            {
-                count++;
-                p = p->next;
-            }
-        }
-        return count;
-    }
-
-    V find(K str)
-    {
-        int index = hashFunction(str);
-        bool FindName = false;
-
-        V v = nullptr;
-        item* p = HashTable[index];
-
-        state = -1;
-        while (p != nullptr)
-        {
-            state++;
-            if (!keyEmpty( p->key) && !strcmp(p->key, str))
-            {
-                FindName = true;
-                v = p->value;
-                break;
-            }
-            p = p->next;
-        }
-        if (!FindName)
-            state = -1;
-
-        return v;
-    }
-    void remove(K str)
+    inline void remove(K str)
     {
         int index = hashFunction(str);
 
@@ -166,19 +119,65 @@ public:
             }
         }
     }
+    inline int NumberOfItemsInIndex(int index)
+    {
+        int count = 0;
+        if (keyEmpty(HashTable[index]->key))
+        {
+            return count;
+        }
+        else
+        {
+            count++;
+            item* p = HashTable[index];
+            while (p->next != nullptr)
+            {
+                count++;
+                p = p->next;
+            }
+        }
+        return count;
+    }
+    inline V find(K str)
+    {
+        int index = hashFunction(str);
+        bool FindName = false;
 
+        V v = valueNull();
+        item* p = HashTable[index];
 
+        state = -1;
+        while (p != nullptr)
+        {
+            state++;
+            if (!keyEmpty( p->key) && !keyEqual(p->key, str))
+            {
+                FindName = true;
+                v = p->value;
+                break;
+            }
+            p = p->next;
+        }
+        if (!FindName)
+            state = -1;
+
+        return v;
+    }
     inline int getsize() { return size; }
     inline int getstate() { return state; }
+    inline bool keyEmpty(K k) { return keyEqual(k, keyNull()); }
+    inline bool valueEmpty(V v) { return valueEqual(v, valueNull()); };
 
-
+//哈希可重写方法
 protected:
     int state;//状态值，-1为找空，>=为链表的索引值
-    virtual int keyEqual(const K& k1, const K& k2);
-    virtual bool keyEmpty(const K& k);
-    virtual bool valueEmpty(const V& v);
-    virtual V valueNull();
-    virtual K keyNull();
+
+    virtual int hashFunction(K str) = 0;//哈希函数
+    virtual int keyEqual(K k1, K k2){return k1 == k2;}
+    virtual int valueEqual(V v1, V v2) { return v1 == v2; }
+    virtual V valueNull() { return nullptr; }
+    virtual K keyNull() {  return K{}; }
+
 
 };
 
@@ -190,38 +189,68 @@ protected:
 
 class hashTable:basehashTable<char*,int**>
 {
-private:
-    struct item
-    {
-        char* key;
-        int** value;
-        item* next;
-
-        item() : key(nullptr), value(nullptr), next(nullptr) {}
-        item(char* k, int** v) : key(k), value(v), next(nullptr) {}
-    };
-    static const int tableSize = 100000;  // 存储量可改变
-    item** HashTable;
-    int state;//状态值，-1为找空，>=为链表的索引值
-    int size;
-
+//重写方法
 public:
+    
+    inline hashTable() :basehashTable<char*, int**>(100000) {};
+    inline ~hashTable() {};
+
+protected:
     int hashFunction(char* str);
-    hashTable();
-    ~hashTable();
-    void AddItem(char* str, int** vv);
-    int NumberOfItemsInIndex(int index);
+    inline int keyEqual(const char*& k1, const char*& k2) { return strcmp(k1, k2); }
+    inline char* keyNull() { return nullptr; }
+
+//独有方法
+public:
     void PrintTable();
     void PrintItemsInIndex(int index);
-    int** find(char* str);
-    void remove(char* str);
     void init();
     int** getShape(char* str);
     void generateStrings(string current, int len, int maxLength, int samecount);
-    inline int getsize() { return size; }
-    inline int getstate() { return state; }
 };
 
 
-extern hashTable shapeHashTable;
+
+
+//局面置换表
+extern U64 zobristInitRandom;
+class TTEntrace
+{
+public:
+    TTEntrace();
+    ~TTEntrace();
+
+    Pos moves[150];//所有可移动的点
+    int value;//动态估值
+
+
+private:
+
+
+};
+
+
+class TransitionTable :basehashTable<U64, TTEntrace*> {
+    //重写方法
+public:
+
+    inline TransitionTable():basehashTable<U64, TTEntrace*>(1000000) {};
+    inline ~TransitionTable() {};
+
+protected:
+    inline int hashFunction(U64 zobristkey) {
+        return zobristkey % tableSize;
+    }
+    inline U64 keyNull() { return zobristInitRandom; };
+
+
+    //独有方法
+
+
+};
+
+
+
+
+
 #endif // HASHTABLE_H

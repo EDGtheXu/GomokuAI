@@ -1,11 +1,14 @@
 #include"config.h"
+#include <random>
+static std::mt19937_64 random(time(NULL));
+
 
 //总体设置
 int MAX_DEPTH = 4;
-int keepLen = 20;
+int keepLen = 30;
 int range = 2;
-int MAX_VCT_DEPTH = 5;//VCT可扩展层数
-int MAX_VCF_DEPTH = 15;//VCF可扩展层数
+int MAX_VCT_DEPTH = 6;//VCT可扩展层数
+int MAX_VCF_DEPTH = 25;//VCF可扩展层数
 
 //开局设置
 int step_INIT = -1;
@@ -75,3 +78,9 @@ const vector<string> _shaps_huo2 = { "00//0","0//00","0/0/0","0/00/0" };
 const vector<string> _shaps_ming2 = { "//000","/0/00","/00/0","/000/",  "000//","00/0/","0/00/","/000/" };
 const vector<string> _shaps_huo1 = { "00/00" };
 
+playerEnum operator-(playerEnum p) {
+	return p == ME ? OPPO : (p == OPPO ? ME : EMPTY);
+};
+
+
+U64 zobristInitRandom = random();

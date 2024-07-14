@@ -13,22 +13,6 @@
 
 
 
-
-
-hashTable::hashTable()
-{
-    HashTable = new item * [tableSize];
-    for (int i = 0; i < tableSize; ++i)
-        HashTable[i] = new item();
-    state = -1;
-    size = 0;
-}
-
-hashTable::~hashTable()
-{
-
-}
-
 int hashTable::hashFunction(char* str)
 {
     int len = strlen(str);
@@ -58,52 +42,8 @@ int hashTable::hashFunction(char* str)
     return index;
 }
 
-void hashTable::AddItem(char* str, int** vv)
-{
-    int index = hashFunction(str);
 
-    if (HashTable[index]->key == nullptr)
-    {
-        HashTable[index]->key = str;
-        HashTable[index]->value = vv;
-        size++;
-    }
-    else
-    {
-        item* p = HashTable[index];
-        item* n = new item(str, vv);
-        bool exist = false;
-        while (p->next != nullptr && !(exist=!strcmp(p->key,str)))
-        {
-            p = p->next;
-        }
-        if (exist) 
-            return;
 
-        size++;
-        p->next = n;
-    }
-}
-
-int hashTable::NumberOfItemsInIndex(int index)
-{
-    int count = 0;
-    if (HashTable[index]->key == nullptr)
-    {
-        return count;
-    }
-    else
-    {
-        count++;
-        item* p = HashTable[index];
-        while (p->next != nullptr)
-        {
-            count++;
-            p = p->next;
-        }
-    }
-    return count;
-}
 
 void hashTable::PrintTable()
 {
@@ -136,85 +76,6 @@ void hashTable::PrintItemsInIndex(int index)
     }
 }
 
-int** hashTable::find(char* str)
-{
-    int index = hashFunction(str);
-    bool FindName = false;
-
-    int** v = nullptr;
-    item* p = HashTable[index];
-
-    state = -1;
-    while (p != nullptr)
-    {
-        state++;
-        if (p->key&&!strcmp( p->key , str))
-        {
-            FindName = true;
-            v = p->value;
-            break;
-        }
-        p = p->next;
-    }
-    if (!FindName)
-        state = -1;
-
-    return v;
-}
-
-void hashTable::remove(char* str)
-{
-    int index = hashFunction(str);
-
-    item* delPtr;
-    item* p1;
-    item* p2;
-
-    // case0: bucket is empty
-    if (HashTable[index]->key == nullptr)
-    {
-        return;
-    }
-    // case1: only one item contained in the bucket, and that item has matching name
-    else if (strcmp( HashTable[index]->key, str)==0 && HashTable[index]->next == nullptr)
-    {
-        HashTable[index]->key = nullptr;
-        size--;
-    }
-    // case 2: match is located in the first item in the bucket and there are more items in the bucket
-    else if (strcmp(HashTable[index]->key, str) == 0)
-    {
-        delPtr = HashTable[index];
-        HashTable[index] = HashTable[index]->next;
-        delete delPtr;
-        size--;
-    }
-    // case 3: the bucket contains items, but first item is not a match
-    else
-    {
-        p1 = HashTable[index]->next;
-        p2 = HashTable[index];
-        while (p1 != nullptr && strcmp( p1->key , str))
-        {
-            p2 = p1;
-            p1 = p1->next;
-        }
-        // case 3.1: no match
-        if (p1 == nullptr)
-        {
-            return;
-        }
-        //case 3.2: match is found
-        else
-        {
-            delPtr = p1;
-            p1 = p1->next;
-            p2->next = p1;
-            delete delPtr;
-            size--;
-        }
-    }
-}
 
 
 int** hashTable::getShape(char* str)
@@ -287,3 +148,9 @@ void hashTable::generateStrings(string current, int len, int maxLength, int same
 
 
 hashTable shapeHashTable;
+TransitionTable TT;
+
+
+
+
+

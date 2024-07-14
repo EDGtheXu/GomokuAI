@@ -8,6 +8,9 @@ board::board()
 {
 	memset(chess, EMPTY, sizeof(chess));
 	curpos = pair<int, int>(8, 8);
+	turnToMove = ME;
+	turnToMoveOppo = -turnToMove;
+	moveCount = 0;
 }
 board::board(const board& b)
 {
@@ -778,73 +781,80 @@ int board::abSearch(playerEnum p, int depth, int alpha, int beta, int maxdept)
 	if (depth == maxdept - 1) {
 
 		if (depth % 2 == 0) {//我方
+
+
+
+			board* nbb = this->reverse();
+			int v0[7]{ 0 };
+			int _v0[7]{ 0 };
+			nbb->getShapes(v0, _v0);//冲四或活四直接赢 
+			if (_v0[0] || _v0[1]) {
+				return ((int)p) * MAX_INT;
+
+			}
+			if (v0[1]) return -((int)p) * MAX_INT;  //对方活四 
+
+
 			pair<int, int>poss[150];
-			int w = 0;
-			int count = getAllPossiblePos(p, depth, poss, &w);
-			if (w) return (int)p * MAX_INT;
+			int count = getAllPossiblePos1(p, depth, poss);
 
-			
-			if (count <= 6 && depth <= MAX_VCT_DEPTH   || 
-				count == 1 && depth <= MAX_VCF_DEPTH
-				) {//防守方守冲四活三，扩展2层
+			//估值
 
-				int max = MIN_INT;
-				int rc = 0;
-				while (count--)
-				{
-					chess[poss[rc].first][poss[rc].second] = p;
+				 //int min = MAX_INT;
+			int max = MIN_INT;
+			int rc = 0;
+			while (count--) {
 
-					int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept + 2);
+				nbb->chess[poss[rc].first][poss[rc].second] = -(int)p;
+				chess[poss[rc].first][poss[rc].second] = p;
+
+
+				int t;
+
+
+				//进攻方走冲四活三，扩展1层
+				int v[7]{ 0 };
+				int _v[7]{ 0 };
+				nbb->getShapes4(poss[rc], v, _v);
+				if ((_v[1] || _v[0]) && depth <= MAX_VCF_DEPTH) {
+					int count = 0;int i = 0;int j = 0;
+					for (; i < 15; i++) {
+						int flag = 0;
+						for (; j < 15; j++) {
+							if (!chess[i][j]) {
+								pair<int, int> np = pair<int, int>(i, j);
+								chess[i][j] = p;
+
+								if (isWin(p, np)) {
+									flag = 1;
+									chess[i][j] = -(int)p;
+									break;
+								}
+								chess[i][j] = 0;
+							}
+						}
+						if (flag) break;
+					}
+					t = abSearch(p, depth + 2, alpha, beta, maxdept + 2);
+					nbb->chess[poss[rc].first][poss[rc].second] = 0;
+					chess[i][j] = 0;
 					chess[poss[rc].first][poss[rc].second] = 0;
-					max = t > max ? t : max; alpha = max > alpha ? max : alpha;
-					if (alpha >= beta) {
-						return max;
-					}
-					rc++;
 				}
-				return max;
-			}
-			else {//估值
-				board* nbb = this->reverse();
-				int v0[7]{ 0 };
-				int _v0[7]{ 0 };
-				nbb->getShapes(v0, _v0);
-				//int min = MAX_INT;
-				int max = MIN_INT;
-				int rc = 0;
-				while (count--) {
-
-					nbb->chess[poss[rc].first][poss[rc].second] = -(int)p;
-					chess[poss[rc].first][poss[rc].second] = p;
-					if (isWin(p, poss[rc])) { this->chess[poss[rc].first][poss[rc].second] = 0; return ((int)p) * MAX_INT; }
-
-					int t;
-
-
-					//进攻方走冲四活三，扩展1层
-					int v[7]{ 0 };
-					int _v[7]{ 0 };
-					getShapes4(poss[rc], v, _v);
-					if (_v[1] && depth <= MAX_VCT_DEPTH) {
-						t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept + 1);
-						nbb->chess[poss[rc].first][poss[rc].second] = 0;
-						chess[poss[rc].first][poss[rc].second] = 0;
-					}
-					else {
-						nbb->chess[poss[rc].first][poss[rc].second] = 0;
-						chess[poss[rc].first][poss[rc].second] = 0;
-						t = -nbb->getScoreP(poss[rc], v0, _v0);
-					}
-
-
-					max = t > max ? t : max; alpha = max > alpha ? max : alpha;
-					if (alpha >= beta) {
-						return max;
-					}
-					rc++;
+				else {
+					nbb->chess[poss[rc].first][poss[rc].second] = 0;
+					chess[poss[rc].first][poss[rc].second] = 0;
+					t = -nbb->getScoreP(poss[rc], v0, _v0);
 				}
-				return max;
+
+
+				max = t > max ? t : max; alpha = max > alpha ? max : alpha;
+				if (alpha >= beta) {
+					return max;
+				}
+				rc++;
 			}
+			return max;
+
 
 
 		}
@@ -853,14 +863,14 @@ int board::abSearch(playerEnum p, int depth, int alpha, int beta, int maxdept)
 			int w = 0;
 			int count = getAllPossiblePos(p, depth, poss, &w);
 			if (w) return (int)p * MAX_INT;
-			if (count <= 6 && depth <= MAX_VCT_DEPTH ||
+			if (count <= 10 && depth <= MAX_VCT_DEPTH ||
 				count == 1 && depth <= MAX_VCF_DEPTH
-				) {//防守方守冲四活三，扩展2层
+				) {//防守方守冲四活三，扩展1层
 				int rc = 0;
 				int min = MAX_INT;
 				while (count--) {
 					chess[poss[rc].first][poss[rc].second] = p;
-					int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept + 2);
+					int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept + 1);
 					chess[poss[rc].first][poss[rc].second] = 0;
 
 
@@ -953,6 +963,7 @@ int board::abSearch(playerEnum p, int depth, int alpha, int beta, int maxdept)
 			
 
 			this->chess[poss[rc].first][poss[rc].second] = 0;
+
 			max = t > max ? t : max; alpha = max > alpha ? max : alpha;
 			if (alpha >= beta) {
 				return max;
@@ -975,6 +986,9 @@ int board::abSearch(playerEnum p, int depth, int alpha, int beta, int maxdept)
 			int t = abSearch((playerEnum)(-(int)p), depth + 1, alpha, beta, maxdept);
 
 			this->chess[poss[rc].first][poss[rc].second] = 0;
+
+			if (depth == 1)
+				t = t;
 			min = t < min ? t : min;
 			beta = min < beta ? min : beta;
 			if (beta <= alpha) {
@@ -1018,7 +1032,7 @@ pair<int, int> board::policy(playerEnum p)
 	int maxv = -MIN_INT * 2;
 
 	int rc = 0;
-	range = 1;//重设置range
+
 	while (count--) {
 
 #ifdef DEBUG_POLICY

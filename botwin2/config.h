@@ -12,17 +12,20 @@
 #define DEBUG
 #define DEBUG_main
 #define DEBUG_POLICY
-//#define DEBUG_ABS
+#define DEBUG_ABS
 //#define DEBUG_POSS
 
 
 
 //#define DEBUG_BOTZONE
 //#define TIME_CONTROL
-
-
-
 using namespace std;
+
+typedef pair<int, int> Pos;
+typedef uint64_t U64;
+
+
+
 //◊‹ÃÂ…Ë÷√
 extern int MAX_DEPTH ;
 extern int keepLen ;
@@ -106,10 +109,18 @@ enum playerEnum
 	OPPO = -1
 };
 
+playerEnum operator-(playerEnum p);
+
 enum shapeEnum {
 	WIN = 0, H4C4, H3, C3, H2, M2, H1, 
 	_H4 = 0, _C4, _H3, _C3, _H2, _M2, _H1,
 };
 
+
+class hashTable;
+class TransitionTable;
+
+extern hashTable shapeHashTable;
+extern TransitionTable TT;
 
 #endif // !CONFIG
