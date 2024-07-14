@@ -217,12 +217,18 @@ extern U64 zobristInitRandom;
 class TTEntrace
 {
 public:
-    TTEntrace();
+    TTEntrace(Pos*ps,int c,int v):value(v) {
+        for (int i = 0;i < moveCount;i++) {
+            moves[i] = ps[i];
+        }
+    };
     ~TTEntrace();
 
     Pos moves[150];//所有可移动的点
+    int moveCount;
     int value;//动态估值
 
+    
 
 private:
 
@@ -245,7 +251,35 @@ protected:
 
 
     //独有方法
+public:
+    inline void AddItem(U64 str, TTEntrace* vv) {
+        int index = hashFunction(str);
 
+        if (keyEmpty(HashTable[index]->key))
+        {
+            HashTable[index]->key = str;
+            HashTable[index]->value = vv;
+            size++;
+        }
+        else
+        {
+            item* p = HashTable[index];
+            item* n = new item(str, vv);
+            bool exist = false;
+            while (p->next != nullptr && !(exist = !keyEqual(p->key, str)))
+            {
+                p = p->next;
+            }
+            if (exist) {
+                delete p->value;
+                p->value = vv;
+                return;
+            }
+
+            size++;
+            p->next = n;
+        }
+    }
 
 };
 

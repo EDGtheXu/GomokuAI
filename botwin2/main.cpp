@@ -3,30 +3,13 @@
 #include "config.h"
 #include "rule.h"
 #include "evaluate.h"
-#include"board.h"
-#include"hashTable.h"
+#include "hashTable.h"
+#include "board.h"
+
 
 int main()
 {
-
-	board b;
-	b.move(10, 0);
-	b.move(10, 1);
-	b.move(11, 0);
-	b.move(11, 1);
-
-	b.move(12, 1);
-	b.move(13, 1);
-	b.move(12, 2);
-	b.move(14, 5);
-	b.move(12, 3);
-
-	cout << b << endl;
-	
-	for (int i = 0;i < 29;i++) {
-		cout << b.strs[3][i] << endl;;
-	}
-	
+	strTree::initRoots();
 
 
 	/*

@@ -28,7 +28,7 @@ board::board()
 	}
 
 	initStrIndexs();
-
+	initZobrish();
 }
 board::board(const board& b)
 {
@@ -1133,13 +1133,21 @@ void board::getShapes4(pair<int, int>& pos, int vv[2][7]) {
 #ifdef DEBUG
 	int t = clock();
 #endif // DEBUG
+	uint32_t indexs = getStrIndexs(pos);
 
-	char* strs[4]{ 0 };
-	toString4(strs, pos);
+	char* nstrs[4]{};
+	nstrs[3] = strs[3][indexs & 255];
+	indexs >>= 8;
+	nstrs[2] = strs[1][indexs & 255];
+	indexs >>= 8;
+	nstrs[1] = strs[1][indexs & 255];
+	indexs >>= 8;
+	nstrs[0] = strs[3][indexs & 255];
+
 //¶ÁÈ¡Ê÷
 	for (int i = 0;i < 4;i++) {
 		if (!strs[i])continue;
-		int** vvv = shapeHashTable.getShape(strs[i]);
+		int** vvv = shapeHashTable.getShape(nstrs[i]);
 		for (int i = 0;i < 7;i++) {
 			vv[0][i] += vvv[0][i];
 			vv[1][i] += vvv[1][i];

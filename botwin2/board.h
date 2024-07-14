@@ -6,6 +6,7 @@
 #include <iostream>
 #include <random>
 #include "config.h"
+#include "hashTable.h"
 
 
 
@@ -93,14 +94,23 @@ public:
 		strs[0][indexs][x2] = p + '0';
 	}
 
-	inline void changeShape(Pos pos) {
+	inline void addMoveShape(Pos pos) {
 		int vv[2][7]{ 0 };
 		getShapes4(pos, vv);
 
 		for (int i = 0;i < 7;i++) {
-
+			shapes[0][i] += vv[0][i];
+			shapes[1][i] += vv[1][i];
 		}
+	}
+	inline void removeMoveShape(Pos pos) {
+		int vv[2][7]{ 0 };
+		getShapes4(pos, vv);
 
+		for (int i = 0;i < 7;i++) {
+			shapes[0][i] -= vv[0][i];
+			shapes[1][i] -= vv[1][i];
+		}
 	}
 
 //搜索
@@ -120,11 +130,12 @@ public:
 
 //获取棋型和字符串
 	void getShapes(int* v, int* _v);
-	inline void getShapes4(pair<int, int>& pos, int vv[2][7]);
+	void getShapes4(pair<int, int>& pos, int vv[2][7]);
 	inline void getShapes4(pair<int, int>& pos, int* v, int* _v);//del
 
 	int toString(char* strs[]);
-	inline int toString4(char* strs[], pair<int, int>& pos);
+	inline int toString4(char* strs[], pair<int, int>& pos);//del
+
 	void addShapes(int v[7], int _v[7]);
 
 //VCF
@@ -138,22 +149,32 @@ public:
 
 	void initZobrish() {
 		for (int i = 0; i < 15; i++) 
-			for (int j = 0; j < 15; i++)
+			for (int j = 0; j < 15; j++)
 				zobrist[0][i][j] = random();
 
 		for (int i = 0; i < 15; i++)
-			for (int j = 0; j < 15; i++)
+			for (int j = 0; j < 15; j++)
 				zobrist[1][i][j] = random();
 		zobristKey = random();
 	}
 
+	void save(Pos*ps,int pcount,int v) {
+		TTEntrace* tte = new TTEntrace(ps, pcount, v);
+		TT.AddItem(zobristKey, tte);
+	}
+
+
+
+	//移动
 	inline void setChess(playerEnum p, Pos pos) {
 		this->chess[pos.first][pos.second] = p;
 		changeStr(p, pos);
+		
 	}
 	inline void move(Pos pos) {
 		setChess(turnToMove,pos);
-		zobristKey ^= zobrist[turnToMove][pos.first][pos.second];
+		addMoveShape(pos);
+		zobristKey ^= zobrist[turnToMove==ME?0:1][pos.first][pos.second];
 		historyMoves[moveCount] = pos;
 
 
@@ -163,14 +184,7 @@ public:
 	}
 	inline void move(int x,int y) {
 		Pos pos(x, y);
-		setChess(turnToMove, pos);
-		zobristKey ^= zobrist[turnToMove][pos.first][pos.second];
-		historyMoves[moveCount] = pos;
-
-
-		turnToMove = -turnToMove;
-		turnToMoveOppo = -turnToMoveOppo;
-		moveCount++;
+		move(pos);
 	}
 
 
@@ -178,7 +192,8 @@ public:
 		moveCount--;
 		Pos p = historyMoves[moveCount];
 		setChess(EMPTY,p);
-		zobristKey ^= zobrist[turnToMove][p.first][p.second];
+		removeMoveShape(p);
+		zobristKey ^= zobrist[turnToMoveOppo==ME?0:1][p.first][p.second];
 
 
 		turnToMove = -turnToMove;
