@@ -7,10 +7,28 @@
 board::board()
 {
 	memset(chess, EMPTY, sizeof(chess));
-	curpos = pair<int, int>(8, 8);
 	turnToMove = ME;
 	turnToMoveOppo = -turnToMove;
 	moveCount = 0;
+
+	for (int i = 0;i < 15;i++) {
+		for (int j = 0;j < 15;j++) {
+			strs[0][i][j] = '0';
+			strs[1][i][j] = '0';
+
+		}
+		for (int j = 0; j <= i; j++)
+		{
+			strs[2][i][j] = '0';
+			strs[3][i][j] = '0';
+
+			strs[2][28-i][j] = '0';
+			strs[3][28-i][j] = '0';
+		}
+	}
+
+	initStrIndexs();
+
 }
 board::board(const board& b)
 {
@@ -1111,33 +1129,26 @@ void board::getShapes(int* v, int* _v) {
 	timeshape += clock() - t;
 }
 
-void board::getShapes4(pair<int, int>& pos, int* v, int* _v) {
+void board::getShapes4(pair<int, int>& pos, int vv[2][7]) {
+#ifdef DEBUG
 	int t = clock();
+#endif // DEBUG
+
 	char* strs[4]{ 0 };
 	toString4(strs, pos);
 //¶ÁÈ¡Ê÷
 	for (int i = 0;i < 4;i++) {
 		if (!strs[i])continue;
-		int** vv = shapeHashTable.getShape(strs[i]);
+		int** vvv = shapeHashTable.getShape(strs[i]);
 		for (int i = 0;i < 7;i++) {
-			v[i] += vv[0][i];
-			_v[i] += vv[1][i];
+			vv[0][i] += vvv[0][i];
+			vv[1][i] += vvv[1][i];
 		}
 	}
 
-	/*
-	char nnstr[100]{ 0 };
-	strcat(nnstr, strs[1]);
-	string nstr = string(strs[0]).append("2").append(strs[1]).append("2").append(strs[2]).append("2").append(strs[3]);
-	shapeHT.hm.insert(make_pair(nstr, nullptr));
-	testCount++;
-	*/
-
-	/*
-	strTree::readTree(tree1, strs, 4, v);
-	strTree::readTree(tree2, strs, 4, _v);
-	*/
+#ifdef DEBUG
 	timeshape4 += clock() - t;
+#endif // DEBUG
 }
 
 int board::getScoreP(pair<int, int>& pos, int v0[7], int _v0[7]) {
@@ -1364,4 +1375,27 @@ pair<int, int> board::lose() {
 		}
 	}
 	return pos;
+}
+
+
+void board::getShapes4(pair<int, int>& pos, int* v, int* _v) {
+#ifdef DEBUG
+	int t = clock();
+#endif // DEBUG
+
+	char* strs[4]{ 0 };
+	toString4(strs, pos);
+	//¶ÁÈ¡Ê÷
+	for (int i = 0;i < 4;i++) {
+		if (!strs[i])continue;
+		int** vvv = shapeHashTable.getShape(strs[i]);
+		for (int i = 0;i < 7;i++) {
+			v[i] += vvv[0][i];
+			_v[i] += vvv[1][i];
+		}
+	}
+
+#ifdef DEBUG
+	timeshape4 += clock() - t;
+#endif // DEBUG
 }

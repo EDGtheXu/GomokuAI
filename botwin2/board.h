@@ -20,10 +20,16 @@ class board
 {
 public:
 	int chess[15][15];
-	pair<int, int> curpos;
+
+	//棋型：ME  OPPO
+	int shapes[2][7]{0};
+
+	//字符串：行  列  主  副
+	char strs[4][29][16] { '0' };
 
 private:
 
+	uint32_t strIndexs[15][15];
 public:
 	int lastValue;
 	int lastRc;
@@ -42,6 +48,61 @@ public:
 	friend ostream& operator<<(ostream& os, const board& b);
 	board* reverse();
 
+	//棋型和字符串变换
+
+	void initStrIndexs() {
+		for (uint16_t i = 0;i < 15;i++) {
+			for (uint16_t j = 0;j < 15;j++) {
+
+				//行
+				uint32_t res = i;
+
+				//列
+				res <<= 8;
+				res |= j;
+
+				//主
+				res <<= 8;
+				res |= (i - j + 14);
+
+				//副
+				res <<= 8;
+				res |= (i + j);
+
+				strIndexs[i][j] = res;
+
+			}
+		}
+	}
+
+	inline uint32_t getStrIndexs(Pos pos) {
+		return strIndexs[pos.first][pos.second];
+	}
+
+	inline void changeStr(playerEnum p,Pos pos) {
+		uint32_t indexs = getStrIndexs(pos);
+		uint8_t x2 = (indexs>>16) & 255;
+		uint8_t x1 = (indexs>>24) & 255;
+
+		strs[3][indexs & 255][x1+x2<14?x1:14-x2] = p + '0';
+		indexs >>= 8;
+		strs[2][indexs & 255][x1>x2?x2:x1] = p + '0';
+		indexs >>= 8;
+		strs[1][x2][indexs>>8] = p + '0';
+		indexs >>= 8;
+		strs[0][indexs][x2] = p + '0';
+	}
+
+	inline void changeShape(Pos pos) {
+		int vv[2][7]{ 0 };
+		getShapes4(pos, vv);
+
+		for (int i = 0;i < 7;i++) {
+
+		}
+
+	}
+
 //搜索
 	int abSearch(playerEnum p, int depth, int alpha, int beta, int maxdept);
 
@@ -59,7 +120,9 @@ public:
 
 //获取棋型和字符串
 	void getShapes(int* v, int* _v);
-	inline void getShapes4(pair<int, int>& pos, int* v, int* _v);
+	inline void getShapes4(pair<int, int>& pos, int vv[2][7]);
+	inline void getShapes4(pair<int, int>& pos, int* v, int* _v);//del
+
 	int toString(char* strs[]);
 	inline int toString4(char* strs[], pair<int, int>& pos);
 	void addShapes(int v[7], int _v[7]);
@@ -86,7 +149,7 @@ public:
 
 	inline void setChess(playerEnum p, Pos pos) {
 		this->chess[pos.first][pos.second] = p;
-
+		changeStr(p, pos);
 	}
 	inline void move(Pos pos) {
 		setChess(turnToMove,pos);
@@ -117,9 +180,15 @@ public:
 		setChess(EMPTY,p);
 		zobristKey ^= zobrist[turnToMove][p.first][p.second];
 
+
 		turnToMove = -turnToMove;
 		turnToMoveOppo = -turnToMoveOppo;
 
+	}
+
+	inline	Pos lastMove() {
+		if (moveCount)return historyMoves[moveCount - 1];
+		else return Pos(-1, -1);
 	}
 
 	
