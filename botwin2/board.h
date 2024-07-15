@@ -14,13 +14,14 @@ using namespace std;
 static std::mt19937_64 random(time(NULL));
 
 
-
+typedef TTEntrace Move;
 
 enum playerEnum;
 class board
 {
 public:
 	int chess[15][15];
+	int rchess[15][15];
 
 	//棋型：ME  OPPO
 	int shapes[2][7]{0};
@@ -31,6 +32,8 @@ public:
 private:
 
 	uint32_t strIndexs[15][15];
+	bool terminal = false;
+
 public:
 	int lastValue;
 	int lastRc;
@@ -96,6 +99,7 @@ public:
 
 	inline void addMoveShape(Pos pos) {
 		int vv[2][7]{ 0 };
+
 		getShapes4(pos, vv);
 
 		for (int i = 0;i < 7;i++) {
@@ -105,6 +109,7 @@ public:
 	}
 	inline void removeMoveShape(Pos pos) {
 		int vv[2][7]{ 0 };
+
 		getShapes4(pos, vv);
 
 		for (int i = 0;i < 7;i++) {
@@ -113,35 +118,81 @@ public:
 		}
 	}
 
+	inline int* myShapes() {
+		return shapes[turnToMoveOppo == ME ? 0 : 1];
+	}
+	inline int* oppoShape() {
+		return shapes[turnToMoveOppo == ME ? 1 : 0];
+	}
+
 //搜索
-	int abSearch(playerEnum p, int depth, int alpha, int beta, int maxdept);
+	int abSearch(int depth, int alpha, int beta, int maxdept);
 
 //找可能落子点
 	int getAllPossiblePos(playerEnum p, int depth, pair<int, int>* res, int* w);
 	int getAllPossiblePos0(playerEnum p, int, pair<int, int>* res, int*);
 	int getAllPossiblePos1(playerEnum p, int depth, pair<int, int>* res);
 
+
+	int genAreaAll(Pos*ps) {
+		int mask[15][15]{ 0 };
+		for (int i = 0;i < moveCount;i++) {
+			Pos& p = historyMoves[i];
+			int x = p.first;
+			int y = p.second;
+			mask[x][y] = -255;
+			for (int ii = x - range; ii <= x + range; ii++) {
+				for (int jj = y - range; jj <= y + range; jj++) {
+					if (ii >= 0 && ii < ROW && jj >= 0 && jj < COL) 
+						mask[ii][jj] += 1;
+				}
+			}
+		}
+		int count = 0;
+		for(int i=0;i<15;i++)
+			for (int j = 0;j < 15;j++) {
+				if (mask[i][j] > 0) {
+					ps[count++] = Pos(i, j);
+				}
+			}
+
+
+		return count;
+	}
+
+
 //获取最佳点
-	pair<int, int> policy(playerEnum p);
+	pair<int, int> policy();
 	pair<int, int> lose();
-	int getScoreP(pair<int, int>& pos, int v0[7], int _v0[7]);
-	inline int getScore();
+	int getScoreP(pair<int, int>& pos);
+	inline int getScore(); //获取当前player估值
 	int getScoreLose(pair<int, int>& pos, int v0[7], int _v0[7]);
 
 //获取棋型和字符串
 	void getShapes(int* v, int* _v);
-	void getShapes4(pair<int, int>& pos, int vv[2][7]);
-	inline void getShapes4(pair<int, int>& pos, int* v, int* _v);//del
+	void getShapes4(pair<int, int> pos, int vv[2][7]);
+
 
 	int toString(char* strs[]);
-	inline int toString4(char* strs[], pair<int, int>& pos);//del
+
 
 	void addShapes(int v[7], int _v[7]);
 
 //VCF
+	void VCFDefend() {
 
+	}
+	void VCFAttack() {
 
-	//置换表
+	}
+	void genVCFDefendMove() {
+
+	}
+	void genVCFAttackMove() {
+
+	}
+
+//置换表
 	Pos historyMoves[225];
 	int moveCount;
 	U64 zobristKey;
@@ -167,11 +218,14 @@ public:
 
 	//移动
 	inline void setChess(playerEnum p, Pos pos) {
-		this->chess[pos.first][pos.second] = p;
+		chess[pos.first][pos.second] = p;
+		rchess[pos.first][pos.second] = -p;
 		changeStr(p, pos);
 		
 	}
 	inline void move(Pos pos) {
+
+		removeMoveShape(pos);
 		setChess(turnToMove,pos);
 		addMoveShape(pos);
 		zobristKey ^= zobrist[turnToMove==ME?0:1][pos.first][pos.second];
@@ -191,8 +245,10 @@ public:
 	inline void undo() {
 		moveCount--;
 		Pos p = historyMoves[moveCount];
-		setChess(EMPTY,p);
+
 		removeMoveShape(p);
+		setChess(EMPTY,p);
+		addMoveShape(p);
 		zobristKey ^= zobrist[turnToMoveOppo==ME?0:1][p.first][p.second];
 
 

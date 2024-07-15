@@ -88,17 +88,42 @@ int strTree::get(const char* str, int v[7]) {
 
 
 /*由棋型估值*/
-int strTree::getScoreG(int* v, int* _v) {
+int strTree::getScoreG(int vv[2][7]) {
 #ifdef DEBUG_main
 	int t = clock();
 #endif
+	const int* values = VALUE_GDEFAULT;
+	//我方权值
+	int score =
+		vv[0][0] * values[0] +
+		vv[0][1] * values[1] +
+		vv[0][2] * values[2] +
+		vv[0][3] * values[3] +
+		vv[0][4] * values[4] +
+		vv[0][5] * values[5] +
+		vv[0][6] * values[6]
+		;
+	//对方权值
+	int _score =
+		vv[1][0] * values[0] +
+		vv[1][1] * values[1] +
+		vv[1][2] * values[2] +
+		vv[1][3] * values[3] +
+		vv[1][4] * values[4] +
+		vv[1][5] * values[5] +
+		vv[1][6] * values[6]
+		;
+#ifdef DEBUG_main
+	timescore += clock() - t;
+#endif
+	return score - _score;
+}
 
-	const int* values = nullptr, * _values = nullptr;
-
-	values = VALUE_DEFAULT;
-	_values = VALUE_DEFAULT_OPPO;
-
-
+int strTree::getScoreG(int* v,int* _v) {
+#ifdef DEBUG_main
+	int t = clock();
+#endif
+	const int* values = VALUE_GDEFAULT;
 	//我方权值
 	int score =
 		v[0] * values[0] +
@@ -109,30 +134,21 @@ int strTree::getScoreG(int* v, int* _v) {
 		v[5] * values[5] +
 		v[6] * values[6]
 		;
-
 	//对方权值
 	int _score =
-		_v[0] * _values[0] +
-		_v[1] * _values[1] +
-		_v[2] * _values[2] +
-		_v[3] * _values[3] +
-		_v[4] * _values[4] +
-		_v[5] * _values[5] +
-		_v[6] * _values[6]
+		_v[0] * values[0] +
+		_v[1] * values[1] +
+		_v[2] * values[2] +
+		_v[3] * values[3] +
+		_v[4] * values[4] +
+		_v[5] * values[5] +
+		_v[6] * values[6]
 		;
-
-
-	//优先级  我方先手
-
-
-	int rs = score + _score;
 #ifdef DEBUG_main
 	timescore += clock() - t;
 #endif
-	return rs;
+	return score - _score;
 }
-
-
 
 
 
@@ -182,24 +198,26 @@ void strTree::setTree(strTree* root, const vector<string>& strs, int value) {
 	}
 }
 strTree* strTree::build(strTree* root) {
-	setTree(root, shaps_win, 0);
-	setTree(root, shaps_huo4, 1);
-	setTree(root, shaps_huo3, 2);
-	setTree(root, shaps_chong3, 3);
-	setTree(root, shaps_huo2, 4);
-	setTree(root, shaps_ming2, 5);
-	setTree(root, shaps_huo1, 6);
+	setTree(root, gshaps_win, 0);
+	setTree(root, gshaps_huo4, 1);
+	setTree(root, gshaps_chong4, 2);
+	setTree(root, gshaps_huo3, 3);
+	setTree(root, gshaps_qian3, 4);
+	setTree(root, gshaps_chong3, 5);
+	setTree(root, gshaps_huo2, 6);
+
+
 	return root;
 }
 
 strTree* strTree::build_oppo(strTree* root) {
-	setTree(root, _shaps_huo4_oppo, 0);
-	setTree(root, _shaps_chong4_oppo, 1);
-	setTree(root, _shaps_huo3, 2);
-	setTree(root, _shaps_chong3, 3);
-	setTree(root, _shaps_huo2, 4);
-	setTree(root, _shaps_ming2, 5);
-	setTree(root, _shaps_huo1, 6);
+	setTree(root, gshaps_win_oppo, 0);
+	setTree(root, gshaps_huo4_oppo, 1);
+	setTree(root, gshaps_chong4_oppo, 2);
+	setTree(root, gshaps_huo3_oppo, 3);
+	setTree(root, gshaps_qian3_oppo, 4);
+	setTree(root, gshaps_chong3_oppo, 5);
+	setTree(root, gshaps_huo2_oppo, 6);
 	return root;
 }
 

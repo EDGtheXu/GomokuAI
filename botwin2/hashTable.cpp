@@ -81,7 +81,10 @@ void hashTable::PrintItemsInIndex(int index)
 int** hashTable::getShape(char* str)
 {
     int** ans = find(str);
-    if (ans) return ans;
+    if (ans) {
+
+        return ans;
+    }
 
 
     //δ�鵽

@@ -37,7 +37,8 @@ public:
 	
 	static int readTree(strTree* root, char* strs[], int count, int v[7]);
 	static void initRoots();
-	static int getScoreG(int* v, int* _v);
+	static int getScoreG(int vv[2][7]);
+	static int getScoreG(int *v,int*_v);
 
 	~strTree();
 };

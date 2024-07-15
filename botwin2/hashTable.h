@@ -29,7 +29,8 @@ protected:
 
 
 public:
-
+    int hitCount=0;
+    int unHitCount=0;
 //哈希公用方法
     inline basehashTable(int s) :tableSize(s) {
 
@@ -55,7 +56,7 @@ public:
             item* p = HashTable[index];
             item* n = new item(str, vv);
             bool exist = false;
-            while (p->next != nullptr && !(exist = !keyEqual(p->key, str)))
+            while (p->next != nullptr && !(exist = !keyCmp(p->key, str)))
             {
                 p = p->next;
             }
@@ -86,7 +87,7 @@ public:
             size--;
         }
         // case 2: match is located in the first item in the bucket and there are more items in the bucket
-        else if (keyEqual(HashTable[index]->key, str) == 0)
+        else if (keyCmp(HashTable[index]->key, str) == 0)
         {
             delPtr = HashTable[index];
             HashTable[index] = HashTable[index]->next;
@@ -98,7 +99,7 @@ public:
         {
             p1 = HashTable[index]->next;
             p2 = HashTable[index];
-            while (p1 != nullptr && keyEqual(p1->key, str))
+            while (p1 != nullptr && keyCmp(p1->key, str))
             {
                 p2 = p1;
                 p1 = p1->next;
@@ -150,7 +151,7 @@ public:
         while (p != nullptr)
         {
             state++;
-            if (!keyEmpty( p->key) && !keyEqual(p->key, str))
+            if (!keyEmpty( p->key) && !keyCmp(p->key, str))
             {
                 FindName = true;
                 v = p->value;
@@ -158,14 +159,20 @@ public:
             }
             p = p->next;
         }
-        if (!FindName)
+        if (!FindName) {
             state = -1;
+            unHitCount++;
+        }
+        else {
+            hitCount++;
+        }
+            
 
         return v;
     }
     inline int getsize() { return size; }
     inline int getstate() { return state; }
-    inline bool keyEmpty(K k) { return keyEqual(k, keyNull()); }
+    inline bool keyEmpty(K k) { return !keyCmp(k, keyNull()); }
     inline bool valueEmpty(V v) { return valueEqual(v, valueNull()); };
 
 //哈希可重写方法
@@ -173,7 +180,7 @@ protected:
     int state;//状态值，-1为找空，>=为链表的索引值
 
     virtual int hashFunction(K str) = 0;//哈希函数
-    virtual int keyEqual(K k1, K k2){return k1 == k2;}
+    virtual int keyCmp(K k1, K k2){return k1 != k2;}
     virtual int valueEqual(V v1, V v2) { return v1 == v2; }
     virtual V valueNull() { return nullptr; }
     virtual K keyNull() {  return K{}; }
@@ -187,7 +194,7 @@ protected:
 
 
 
-class hashTable:basehashTable<char*,int**>
+class hashTable:public basehashTable<char*,int**>
 {
 //重写方法
 public:
@@ -197,7 +204,7 @@ public:
 
 protected:
     int hashFunction(char* str);
-    inline int keyEqual(const char*& k1, const char*& k2) { return strcmp(k1, k2); }
+    inline int keyCmp(const char*& k1, const char*& k2) { return strcmp(k1, k2); }
     inline char* keyNull() { return nullptr; }
 
 //独有方法
@@ -222,6 +229,7 @@ public:
             moves[i] = ps[i];
         }
     };
+    TTEntrace():moveCount(0),value(0){}
     ~TTEntrace();
 
     Pos moves[150];//所有可移动的点
@@ -236,7 +244,7 @@ private:
 };
 
 
-class TransitionTable :basehashTable<U64, TTEntrace*> {
+class TransitionTable :public basehashTable<U64, TTEntrace*> {
     //重写方法
 public:
 
@@ -252,34 +260,7 @@ protected:
 
     //独有方法
 public:
-    inline void AddItem(U64 str, TTEntrace* vv) {
-        int index = hashFunction(str);
 
-        if (keyEmpty(HashTable[index]->key))
-        {
-            HashTable[index]->key = str;
-            HashTable[index]->value = vv;
-            size++;
-        }
-        else
-        {
-            item* p = HashTable[index];
-            item* n = new item(str, vv);
-            bool exist = false;
-            while (p->next != nullptr && !(exist = !keyEqual(p->key, str)))
-            {
-                p = p->next;
-            }
-            if (exist) {
-                delete p->value;
-                p->value = vv;
-                return;
-            }
-
-            size++;
-            p->next = n;
-        }
-    }
 
 };
 

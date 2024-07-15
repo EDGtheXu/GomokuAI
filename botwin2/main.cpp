@@ -9,7 +9,7 @@
 
 int main()
 {
-	strTree::initRoots();
+
 
 
 	/*
@@ -81,12 +81,10 @@ int main()
 
 
 
-	/*
-	strTree::initRoots();
+	
 	btzrule();
-	delete tree1;
-	delete tree2;
-	*/
+
+	
 
 	return 0;
 }

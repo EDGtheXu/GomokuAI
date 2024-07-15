@@ -12,7 +12,7 @@
 #define DEBUG
 #define DEBUG_main
 #define DEBUG_POLICY
-#define DEBUG_ABS
+//#define DEBUG_ABS
 //#define DEBUG_POSS
 
 
@@ -56,8 +56,11 @@ extern const int VALUE_DEFAULT[7];
 extern const int VALUE_DEFAULT_OPPO[7];
 extern const int VALUE_MUST_WIN ;
 
+extern const int VALUE_GDEFAULT[7];
+
 extern int time1;
 extern int tos4count ;
+extern int shape4count;
 extern int toscount ;
 extern int timescore4 ;
 extern int timescore ;
@@ -69,37 +72,37 @@ extern int timetemp ;
 extern int timeshape;
 extern int timeshape4;
 
+
 extern int reachMaxDepth;
 extern int searchNode;
 extern int testCount;
 
-//进攻
-extern const vector<string> shaps_win ;
-extern const vector<string> shaps_huo4 ;
-//防守
-//const vector<string> shaps_huo4_oppo ;
-//const vector<string> shaps_chong4_oppo ;
-//公用
-extern const vector<string> shaps_huo3 ;
-extern const vector<string> shaps_chong3 ;
-extern const vector<string> shaps_huo2 ;
-extern const vector<string> shaps_ming2 ;
-extern const vector<string> shaps_huo1 ;
 
 
 
-//进攻
-//const vector<string> _shaps_win ;
-//const vector<string> _shaps_huo4 ;
-//防守
-extern const vector<string> _shaps_huo4_oppo ;
-extern const vector<string> _shaps_chong4_oppo ;
-//公用
-extern const vector<string> _shaps_huo3 ;
-extern const vector<string> _shaps_chong3 ;
-extern const vector<string> _shaps_huo2 ;
-extern const vector<string> _shaps_ming2 ;
-extern const vector<string> _shaps_huo1 ;
+//公用棋型
+extern const vector<string> gshaps_win;
+
+extern const vector<string> gshaps_huo4;
+extern const vector<string> gshaps_chong4 ;
+
+extern const vector<string> gshaps_huo3;
+extern const vector<string> gshaps_qian3;
+extern const vector<string> gshaps_chong3;
+extern const vector<string> gshaps_huo2;
+
+
+//公用棋型
+extern const vector<string> gshaps_win_oppo;
+
+extern const vector<string> gshaps_huo4_oppo;
+extern const vector<string> gshaps_chong4_oppo;
+
+extern const vector<string> gshaps_huo3_oppo;
+extern const vector<string> gshaps_qian3_oppo;
+extern const vector<string> gshaps_chong3_oppo;
+extern const vector<string> gshaps_huo2_oppo;
+
 
 
 enum playerEnum
@@ -112,8 +115,7 @@ enum playerEnum
 playerEnum operator-(playerEnum p);
 
 enum shapeEnum {
-	WIN = 0, H4C4, H3, C3, H2, M2, H1, 
-	_H4 = 0, _C4, _H3, _C3, _H2, _M2, _H1,
+	WIN = 0, H4, C4, H3, Q3, C3, H2, 
 };
 
 

@@ -11,81 +11,29 @@
 
 
 void btzrule() {
-	int b[15][15] = { 0 };//本方1，对方-1，空白0
+	strTree::initRoots();
+
+	board mb;
 	int x, y, n;
 	int xf, yf;
 
 	//恢复目前的棋盘信息
 	cin >> n;
-	cin >> x >> y;
-	if (x == -1) {
-		if (n == 1) {
-			cout << 1 << ' ' << 7 << endl; return;
-		}
-		else {
-			cin >> xf >> yf;
-			cin >> x >> y;
-			if (x == -1) {
-				b[xf][yf] = -1;
-				for (int i = 0; i < n - 2; i++) {
-					cin >> x >> y;
-					b[x][y] = 1;
-					cin >> x >> y;
-					b[x][y] = -1;
-				}
-			}
-			else {
-				b[x][y] = -1;
-				b[xf][yf] = 1;
-				for (int i = 0; i < n - 2; i++) {
-					cin >> x >> y;
-					b[x][y] = 1;
-					cin >> x >> y;
-					b[x][y] = -1;
-				}
-			}
+	
+	
+	for (int i = 0;i < n * 2 - 1;i++) {
+		cin >> x >> y;
+		if (!(x == -1 && y == -1)) {
+			mb.move(x, y);
+
+			cout<<mb.
+			cout << mb << endl;
+			cout << endl;
 		}
 	}
-	else {
-		if (n == 1) {
-			b[x][y] = -1;
-			if (x >= 2 && x <= 12 && y >= 2 && y <= 12) {
-				cout << -1 << ' ' << -1 << endl;
-				return;
-			}
-		}
-		else {
-			cin >> xf >> yf;
-			if (xf == -1) {
-				b[x][y] = 1;
-				cin >> x >> y;
-				b[x][y] = -1;
-				for (int i = 0; i < n - 2; i++) {
-					cin >> x >> y;
-					b[x][y] = 1;
-					cin >> x >> y;
-					b[x][y] = -1;
-				}
-			}
-			else {
-				b[x][y] = -1;
-				b[xf][yf] = 1;
-				cin >> x >> y;
-				b[x][y] = -1;
-				for (int i = 0; i < n - 2; i++) {
-					cin >> x >> y;
-					b[x][y] = 1;
-					cin >> x >> y;
-					b[x][y] = -1;
-				}
-			}
 
-		}
+	strTree::initRoots();
 
-	}
-
-
-	board* mb = new board(b);
 #ifdef DEBUG_main
 	time_t t = clock();
 #endif
@@ -105,26 +53,20 @@ void btzrule() {
 #endif // 
 
 
-
-	pair<int, int> p = mb->policy(ME);
+cout << mb << endl;
+	pair<int, int> p = mb.policy();
 	cout << p.first << ' ' << p.second << endl;
-
-
+	
+	mb.move(p);
+	cout << mb << endl;
 
 #ifdef DEBUG_BOTZONE
-	cout << "rc:" << mb->lastRc << endl;
 	cout << "value:" << mb->lastValue << endl;
 	cout << "time:"<<clock() - t << endl;
 #endif // DEBUG_BOTZONE
 
 
 #ifdef DEBUG_main
-
-
-
-	cout << *mb << endl;
-	mb->chess[p.first][p.second] = 1;
-	cout << *mb << endl;
 	cout << "timescore4=" << timescore4 << endl;
 	cout << "timescore=" << timescore << endl;
 	cout << "timestos=" << timetos << "   toscount=" << toscount << endl;
@@ -141,9 +83,12 @@ void btzrule() {
 
 	cout << "timeshape=" << timeshape << endl;
 	cout << "timeshape4=" << timeshape4 << endl;
-	cout << "shape4Count=" << testCount << endl;
+	cout << "shape4Count=" << shape4count << endl;
+	cout << "shapehash hit/unhit:" << shapeHashTable.hitCount << "/" << shapeHashTable.unHitCount << endl;
+	cout << "TTE hit/unhit:" << TT.hitCount << "/" << TT.unHitCount << endl;
 #endif // DEBUG_main
 
-
+	delete tree1;
+	delete tree2;
 	return;
 }
