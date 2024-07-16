@@ -91,6 +91,8 @@ int** hashTable::getShape(char* str)
     int* v = new int[7]{ 0 };
     int* _v = new int[7]{ 0 };
     int** vv = new int* [2]{ v,_v };
+
+
     tree1->get(str, v);
     tree2->get(str, _v);
 
@@ -104,10 +106,10 @@ int** hashTable::getShape(char* str)
 void hashTable::init()
 {
     //生成10位长的棋盘
-    for (int length = 1; length <= 10; ++length) {
+    for (int length = 1; length <= 12; ++length) {
         generateStrings("", 0, length, 1);
     }
-
+    return;
 }
 
 

@@ -11,11 +11,18 @@
 
 
 void btzrule() {
+	//初始化字典树
 	strTree::initRoots();
+	shapeHashTable.init();
+	timereadtree = 0;
+	shapeHashTable.hitCount = 0;
+	shapeHashTable.unHitCount = 0;
+
+
+	cout << "over" << endl;
 
 	board mb;
 	int x, y, n;
-	int xf, yf;
 
 	//恢复目前的棋盘信息
 	cin >> n;
@@ -25,18 +32,14 @@ void btzrule() {
 		cin >> x >> y;
 		if (!(x == -1 && y == -1)) {
 			mb.move(x, y);
-
-			cout<<mb.
-			cout << mb << endl;
-			cout << endl;
 		}
 	}
 
-	strTree::initRoots();
 
 #ifdef DEBUG_main
 	time_t t = clock();
 #endif
+	//开局设置
 	if (n <= step_INIT) {
 
 		range = range_INIT;
@@ -53,12 +56,11 @@ void btzrule() {
 #endif // 
 
 
-cout << mb << endl;
+
 	pair<int, int> p = mb.policy();
 	cout << p.first << ' ' << p.second << endl;
-	
-	mb.move(p);
-	cout << mb << endl;
+
+
 
 #ifdef DEBUG_BOTZONE
 	cout << "value:" << mb->lastValue << endl;
@@ -67,19 +69,23 @@ cout << mb << endl;
 
 
 #ifdef DEBUG_main
-	cout << "timescore4=" << timescore4 << endl;
-	cout << "timescore=" << timescore << endl;
+	cout << mb << endl;
+	mb.move(p);
+	cout << mb << endl;
+
+	cout << "timemove=" << timemove << endl;
+	cout << "movecount=" << movecount << endl;
 	cout << "timestos=" << timetos << "   toscount=" << toscount << endl;
 	cout << "timestos4=" << timetos4 << "   tos4count=" << tos4count << endl;
 	cout << "aiitime=" << clock() - t << endl;
 	cout << "timepos=" << timepos << endl;
-	cout << "timepos1=" << timepos1 << endl;
+	cout << "timeReadTree=" << timereadtree << endl;
 
 	cout << "timetemp=" << timetemp << endl;
 
-	cout << "search node:" << searchNode << endl;
+	cout << "search node:" << TT.getsize() << endl;
 	cout << "max depth:" << reachMaxDepth << endl;
-	cout << "nps:" << searchNode * 1000.0/ (clock() - t)  << endl;
+	cout << "nps:" << TT.getsize() * 1000.0/ (clock() - t)  << endl;
 
 	cout << "timeshape=" << timeshape << endl;
 	cout << "timeshape4=" << timeshape4 << endl;

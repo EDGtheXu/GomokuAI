@@ -87,35 +87,27 @@ board* board::reverse()
 int board::abSearch(int depth, int alpha, int beta, int maxdept)
 {
 #ifdef DEBUG_ABS
-	cout << *this << endl;
+	
 #endif // DEBUG_ABS
-
+//cout << *this << endl;
 #ifdef DEBUG
-	reachMaxDepth = max(reachMaxDepth, maxdept);
-	searchNode++;
+	reachMaxDepth = reachMaxDepth > depth ? reachMaxDepth : depth;
 #endif // DEBUG
 
+	
 	//step 1: 提前胜负判断
-	if (myShapes()[H4]||myShapes()[C4]) {//我方有 活4 冲4 ，可以直接 连5 ， 我方胜
-		return MAX_INT;
-	}
-	else if (oppoShape()[H4]) {//对方有 活4 ，对方胜
-		return MIN_INT;
-	}
-	else if (oppoShape()[C4] && oppoShape()[H3]) {//对方 活3 冲4，对方胜
-		return MIN_INT;
-	}
-	else if ((myShapes()[H3] ||myShapes()[Q3])&& !oppoShape()[C4]) {//我方 有3 且 对方 无冲4， 我方胜
-		return MAX_INT;
-	}
-	else if (!myShapes()[H3] && !myShapes()[Q3] && !myShapes()[C3] && oppoShape()[H3]+oppoShape()[Q3] > 1) {//我方 无3 且 对方 双3， 对方胜
-		return MIN_INT;
-	}
+	int winFlag = quickWinCheck();
+	if (winFlag)
+		return MAX_INT * winFlag;
 
+	
 
 	//step 2： VCF
 	if (depth == maxdept) {
 		//cout << *this << endl;
+
+
+
 		return getScore();
 
 		/*
@@ -206,12 +198,20 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 	if (!tte) {//未命中置换表
 		tte = new Move();
 		int staticValue = getScore();//静态估值
-		tte->moveCount = genAreaAll(tte->moves);
+		int c = genAreaAll(tte->moves);
+#ifdef FULLSEARCH
+
+		tte->moveCount = c;
+#else
+		tte->moveCount = LC(tte->moves, c);//启发策略
+#endif
 		tte->value = staticValue;
 		TT.AddItem(zobristKey, tte);
 	}
-
-
+	if (tte->value > 10000 || tte->value < -10000) {//必赢必输提前返回
+		//cout << *this << endl;
+		return tte->value;
+	}
 
 	//setp 4: 循环全部着法
 	Pos* poss = tte->moves;
@@ -219,17 +219,18 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 	int rc = 0;
 
 	int max = MIN_INT;
+	int values[150]{ 0 };
 	while (count--) {
 
 		//step 5: 启发式剪枝
 
 		Pos& cur = poss[rc];
 		move(poss[rc]);
-		if (cur.first < 0)
-			cout << NULL << endl;
-		//step 6: ab
-		int t = -abSearch( depth + 1,  -beta,-alpha, maxdept);
 
+		//step 6: ab
+		
+		int t = -abSearch( depth + 1,  -beta,-alpha, maxdept);
+		values[rc] = t;
 		undo();
 
 
@@ -241,16 +242,31 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 		//step 8: ab剪枝
 		max = t > max ? t : max; 
 		alpha = max > alpha ? max : alpha;
+
 		if (max >= beta) {
+			//cout << *this << endl;
 			break;
 		}
+
 		rc++;
 
 
 	}
 	if (terminal) return max;
+
+
+
 	//step 9: 更新置换表
 	tte->value = max;
+	if (tte->value > -10000 && tte->value < 10000) {
+		tte->moveCount = TTrefresh(tte->moves, tte->moveCount, values);
+	}
+	if (max<1000 && max>-1000) {
+		
+	}
+
+
+
 
 	return max;
 }
@@ -264,7 +280,9 @@ pair<int, int> board::policy()
 	//生成根节点着法
 	pair<int, int> poss[150];
 	int values[150]{ 0 };
-	int count = genAreaAll(poss);
+	int count=genAreaAll(poss);
+	
+	count = LC(poss, count);
 	
 	int curmax = MIN_INT;
 	pair<int, int> best = poss[0];
@@ -274,27 +292,33 @@ pair<int, int> board::policy()
 	int rc = 0;
 	int depth = 2;
 	//迭代加深
-	for (depth = 2; depth <=5; depth++)
+	for (depth = START_DEPTH; depth <=MAX_DEPTH; depth++)
 	{
 		int _count = count;
 		rc = 0;
+		curmax = MIN_INT;
+		reachMaxDepth = 0;
 #ifdef DEBUG_POLICY
 			int steptime = clock();
 #endif // DEBUG_POLICY
 		while (_count--) {
+			/*
 			if (values[rc] < -10000) {//必输点
 				rc++;
+				//cout << *this << endl;
 				continue;
 			}
 			else if (values[rc] > 10000) {//必胜点
 				rc++;
+				//cout << *this << endl;
 				continue;
 			}
-
+			*/
 			move(poss[rc]);
-			cout << *this << endl;
-			int t = abSearch(1, curmax, MAX_INT, depth);
 
+			//cout << *this << endl;
+			int t = -abSearch(1, -MAX_INT , -curmax, depth);
+			values[rc] = t;
 			undo();
 
 
@@ -307,20 +331,19 @@ pair<int, int> board::policy()
 				curmax = t;
 				best = poss[rc];
 				maxv = t;
-				lastValue = t;
 			}
 			rc++;
 
 		}
 #ifdef DEBUG_POLICY
-		cout << "depth = " << depth << ", eval = " << curmax<< ", best = (" << best.first << ", " << best.second<<")"<<", time = "<< clock()-steptime << endl;
+		cout << "depth = " << depth <<"-" <<reachMaxDepth<< ", eval = " << curmax << ", best = (" << best.first << ", " << best.second << ")" << ", time = " << clock() - steptime << endl;
 #endif // DEBUG_POLICY
 
 	}
 
 	
 #ifdef DEBUG_POLICY
-	cout << endl << "TOTAL:" << "max depth = " << depth << ", eval = " << curmax << ", best = (" << best.first << ", " << best.second << ")" << endl;
+	cout << endl << "TOTAL:" << "max depth = " << min(depth,MAX_DEPTH) << ", eval = " << curmax << ", best = (" << best.first << ", " << best.second << ")" << endl;
 	cout << "rc = " << rc << endl;
 #endif // DEBUG_POLICY
 
@@ -330,23 +353,26 @@ pair<int, int> board::policy()
 }
 
 
-void board::getShapes4(pair<int, int> pos, int vv[2][7]) {
+void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
 #ifdef DEBUG
 	int t = clock();
-	shape4count+=4;
-
+	shape4count+=1;
 #endif // DEBUG
+
 	uint32_t indexs = getStrIndexs(pos);
 
 	char* nstrs[4]{};
 	nstrs[3] = strs[3][indexs & 255];
 	indexs >>= 8;
-	nstrs[2] = strs[1][indexs & 255];
+	nstrs[2] = strs[2][indexs & 255];
 	indexs >>= 8;
 	nstrs[1] = strs[1][indexs & 255];
 	indexs >>= 8;
-	nstrs[0] = strs[3][indexs & 255];
+	nstrs[0] = strs[0][indexs & 255];
 
+#ifdef DEBUG
+	int tt = clock();
+#endif // DEBUG
 
 
 //读取树
@@ -358,10 +384,11 @@ void board::getShapes4(pair<int, int> pos, int vv[2][7]) {
 			vv[1][i] += vvv[1][i];
 		}
 	}
-timeshape4 += clock() - t;
+
 
 #ifdef DEBUG
-	
+	timeshape4 += clock() - t;
+	timereadtree += clock() - t;
 #endif // DEBUG
 }
 
@@ -371,7 +398,7 @@ int board::getScoreP(pair<int, int>& pos) {
 	int t = clock();
 #endif
 
-	int vv[2][7];
+	int vv[2][SHAPE_TYPES];
 	getShapes4(pos, vv);
 
 
@@ -383,11 +410,11 @@ int board::getScoreP(pair<int, int>& pos) {
 
 
 int board::getScore() {
-	if (turnToMoveOppo == ME) {
+	if (turnToMove == ME) {
 		return strTree::getScoreG(shapes);
 	}
 	else {
-		return strTree::getScoreG(shapes[1],shapes[0]);
+		return -strTree::getScoreG(shapes);
 	}
 
 }

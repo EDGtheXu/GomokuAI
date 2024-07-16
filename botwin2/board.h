@@ -13,6 +13,12 @@
 using namespace std;
 static std::mt19937_64 random(time(NULL));
 
+typedef uint8_t  DIR;
+const DIR D[4]{
+	1,
+
+};
+
 
 typedef TTEntrace Move;
 
@@ -24,7 +30,7 @@ public:
 	int rchess[15][15];
 
 	//棋型：ME  OPPO
-	int shapes[2][7]{0};
+	int shapes[2][SHAPE_TYPES]{0};
 
 	//字符串：行  列  主  副
 	char strs[4][29][16] { '0' };
@@ -98,35 +104,38 @@ public:
 	}
 
 	inline void addMoveShape(Pos pos) {
-		int vv[2][7]{ 0 };
+		int vv[2][SHAPE_TYPES]{ 0 };
 
 		getShapes4(pos, vv);
 
-		for (int i = 0;i < 7;i++) {
+		for (int i = 0;i < SHAPE_TYPES;i++) {
 			shapes[0][i] += vv[0][i];
 			shapes[1][i] += vv[1][i];
 		}
 	}
 	inline void removeMoveShape(Pos pos) {
-		int vv[2][7]{ 0 };
+		int vv[2][SHAPE_TYPES]{ 0 };
 
 		getShapes4(pos, vv);
 
-		for (int i = 0;i < 7;i++) {
+		for (int i = 0;i < SHAPE_TYPES;i++) {
 			shapes[0][i] -= vv[0][i];
 			shapes[1][i] -= vv[1][i];
 		}
 	}
 
-	inline int* myShapes() {
-		return shapes[turnToMoveOppo == ME ? 0 : 1];
+	inline int* myShape() {
+		return shapes[turnToMove == ME ? 0 : 1];
 	}
 	inline int* oppoShape() {
-		return shapes[turnToMoveOppo == ME ? 1 : 0];
+		return shapes[turnToMove == ME ? 1 : 0];
 	}
 
 //搜索
 	int abSearch(int depth, int alpha, int beta, int maxdept);
+	int VCFSearch() {
+
+	}
 
 //找可能落子点
 	int getAllPossiblePos(playerEnum p, int depth, pair<int, int>* res, int* w);
@@ -134,7 +143,7 @@ public:
 	int getAllPossiblePos1(playerEnum p, int depth, pair<int, int>* res);
 
 
-	int genAreaAll(Pos*ps) {
+	int genAreaAll(Pos*ps) {//生成所有可能点
 		int mask[15][15]{ 0 };
 		for (int i = 0;i < moveCount;i++) {
 			Pos& p = historyMoves[i];
@@ -159,38 +168,159 @@ public:
 
 		return count;
 	}
+	void genVCFDefendMove() {//生成 防御活三和冲四
 
+	}
+	void genVCFAttackMove() {//生成 进攻活三和冲四
 
+	}
+	int quickWinCheck() {//返回 1 win    0 未知     -1 输
+		if (myShape()[H4] || myShape()[C4]) {//我方有 活4 冲4 ，可以直接 连5 ， 我方胜
+			//cout << *this << endl;
+			return true;
+		}
+		else if (oppoShape()[H4]) {//对方有 活4 ，对方胜
+			//cout << *this << endl;
+			return false;
+		}
+		else if (oppoShape()[C4] && oppoShape()[H3]) {//对方 活3 冲4，对方胜
+			//cout << *this << endl;
+			return false;
+		}
+		else if ((myShape()[H3] || myShape()[Q3]) && !oppoShape()[C4]) {//我方 有3 且 对方 无冲4， 我方胜
+
+			//cout << *this << endl;
+			return true;
+		}
+		else if (!myShape()[H3] && !myShape()[Q3] && !myShape()[C3] && oppoShape()[H3] + oppoShape()[Q3] > 1) {//我方 无3 且 对方 双3， 对方胜
+			//cout << *this << endl;
+			return false;
+		}
+		return 0;
+	}
+
+//启发策略
+	int LC(Pos* ps, int count) {
+		if (count <= 0) return 0;
+		int values[150]{ 0 };
+		for (int i = 0;i < count;i++) {
+			values[i] = -getLC4(ps[i]);
+
+		}
+		int min = count > keepLen ? keepLen : count;
+
+		int temp1, temp2, temp3;
+		//选择排序
+		int i;
+		for (i = 0; i < min; i++) {
+			int m = values[i];
+			int mi = i;
+			for (int j = i + 1; j < count; j++) {
+				if (values[j] > m) {
+					m = values[j];
+					mi = j;
+				}
+			}
+			if (m < -10000)
+				break;
+			if (m > values[i]) {
+				temp1 = values[i];
+				values[i] = m;
+				values[mi] = temp1;
+
+				temp2 = ps[i].first;
+				temp3 = ps[i].second;
+				ps[i].first = ps[mi].first;
+				ps[i].second = ps[mi].second;
+				ps[mi].first = temp2;
+				ps[mi].second = temp3;
+			}
+
+		}
+
+		return i;
+	}
+	int TTrefresh(Pos* ps, int count, int*values) {//置换表更新
+		if (count <= 0) return 0;
+#ifdef FULLSEARCH
+		int min = count;
+#else
+		int min = count > keepLen ? keepLen : count;
+#endif // FULLSEARCH
+
+		
+		int temp1, temp2, temp3;
+		//选择排序
+		int i;
+		for (i = 0; i < min; i++) {
+			int m = values[i];
+			int mi = i;
+			for (int j = i + 1; j < count; j++) {
+				if (values[j] > m) {
+					m = values[j];
+					mi = j;
+				}
+			}
+			if (m < -10000)
+				break;
+			if (m > values[i]) {
+				temp1 = values[i];
+				values[i] = m;
+				values[mi] = temp1;
+
+				temp2 = ps[i].first;
+				temp3 = ps[i].second;
+				ps[i].first = ps[mi].first;
+				ps[i].second = ps[mi].second;
+				ps[mi].first = temp2;
+				ps[mi].second = temp3;
+			}
+
+		}
+
+		return i;
+	}
 //获取最佳点
 	pair<int, int> policy();
 	pair<int, int> lose();
 	int getScoreP(pair<int, int>& pos);
 	inline int getScore(); //获取当前player估值
-	int getScoreLose(pair<int, int>& pos, int v0[7], int _v0[7]);
+	inline int getLC4(Pos p) {//获取当前位置的四个方向计算LC
+
+		
+		move(p);
+		int flag = quickWinCheck();
+		
+		int res = getScore();
+		undo();
+		if (flag) return MAX_INT*flag;
+		return res;
+		
+
+		/*
+		int vv[2][SHAPE_TYPES]{ 0 };
+		getShapes4(p, vv);
+		int res = 0;
+		for (int i = 0;i < SHAPE_TYPES;i++) {
+			res += vv[0][i];
+			res += vv[1][i];
+		}
+		return res;*/
+	}
+
 
 //获取棋型和字符串
 	void getShapes(int* v, int* _v);
-	void getShapes4(pair<int, int> pos, int vv[2][7]);
-
+	void getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]);
 
 	int toString(char* strs[]);
 
 
-	void addShapes(int v[7], int _v[7]);
 
-//VCF
-	void VCFDefend() {
 
-	}
-	void VCFAttack() {
 
-	}
-	void genVCFDefendMove() {
 
-	}
-	void genVCFAttackMove() {
 
-	}
 
 //置换表
 	Pos historyMoves[225];
@@ -224,6 +354,10 @@ public:
 		
 	}
 	inline void move(Pos pos) {
+#ifdef DEBUG
+		int t = clock();
+		movecount++;
+#endif // DEBUG
 
 		removeMoveShape(pos);
 		setChess(turnToMove,pos);
@@ -235,6 +369,11 @@ public:
 		turnToMove = -turnToMove;
 		turnToMoveOppo = -turnToMoveOppo;
 		moveCount++;
+
+#ifdef DEBUG
+		timemove += clock() - t;
+#endif // DEBUG
+
 	}
 	inline void move(int x,int y) {
 		Pos pos(x, y);
@@ -243,6 +382,10 @@ public:
 
 
 	inline void undo() {
+#ifdef DEBUG
+		int t = clock();
+		movecount++;
+#endif // DEBUG
 		moveCount--;
 		Pos p = historyMoves[moveCount];
 
@@ -254,7 +397,9 @@ public:
 
 		turnToMove = -turnToMove;
 		turnToMoveOppo = -turnToMoveOppo;
-
+#ifdef DEBUG
+		timemove += clock() - t;
+#endif // DEBUG
 	}
 
 	inline	Pos lastMove() {

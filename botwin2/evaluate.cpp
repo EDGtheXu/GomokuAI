@@ -1,6 +1,6 @@
 
 #include "evaluate.h"
-#include "config.h"
+
 
 strTree* tree1 = nullptr;
 strTree* tree2 = nullptr;
@@ -23,17 +23,41 @@ int strTree::get(const char* str, int v[7]) {
 	strTree* root = this;
 	int count = 0;
 	int back = 0;
-	int len = strlen(str);
-	int va = -1;
-	int huosan_single = 0; //避免重复活三
-	int chong4_fix = 0;
 
-	for (int i = 0; i < len && back < len - 4; i++) {
+	int va = -1;
+	//int huosan_single = 0; //避免重复活三
+	//int huoer_single = 0;//避免重复活二
+	//int chong4_fix = 0;
+	int tempv[SHAPE_TYPES]{ 0 };
+	int debug = 0;
+
+
+	//去掉前面的'0'
+	int st = 0;
+	while (str[st] == '0') st++;
+	if (st >= skeepLen) {
+		str = str + st - skeepLen;
+	}
+	int len = strlen(str);
+	
+	//去掉后面的'0'
+	int en = len - 1;
+	int c = 0;
+	while (str[en--] == '0') c++;
+	en += (2+(c>skeepLen?skeepLen:c));
+
+	if (en  < 5)//短字符串舍弃
+		return 0;
+	//获取棋型
+	for (int i = 0; i < en && back < en - 4; i++) {
 		if (str[i] == '/') {
 			if (root->l) root = root->l;
 			else {
 				root = this;
-				if (va != -1) back += 1;//已匹配到
+				if (va != -1) {
+					back += 1;//已匹配到
+					//if(va==C4||va==H3)
+				}
 				else back++;
 				i = back - 1;
 				va = -1;
@@ -43,7 +67,9 @@ int strTree::get(const char* str, int v[7]) {
 			if (root->m) root = root->m;
 			else {
 				root = this;
-				if (va != -1) back += 1;
+				if (va != -1) {
+					back += 1;
+				}
 				else back++;
 				i = back - 1;
 				va = -1;
@@ -53,24 +79,28 @@ int strTree::get(const char* str, int v[7]) {
 			if (root->r)  root = root->r;
 			else {
 				root = this;
-				if (va != -1) back += 1;
+				if (va != -1) {
+					back += 1;
+				}
 				else back++;
 				i = back - 1;
 				va = -1;
 			}
 		}
+
 		if (root->valueIndex != -1) {
-			if (root->valueIndex == 2) {
-				huosan_single++;
-				if (huosan_single > 1) continue;
-			}
-			else if (root->valueIndex == 1) {
-				chong4_fix++;
-				if (chong4_fix > 1) continue;
-			}
+			//if (root->valueIndex == H3||) {
+			//	huosan_single++;
+			//	if (huosan_single > 1) continue;
+			//}
+			//else if (root->valueIndex == C4) {
+			//	chong4_fix++;
+			//	if (chong4_fix > 1) continue;
+			//}
 
 			va = root->valueIndex;
-			v[va] += 1;
+			//v[va] += 1;
+			tempv[va] = 1;
 			count++;
 
 			//root = this;
@@ -78,20 +108,23 @@ int strTree::get(const char* str, int v[7]) {
 			//i = back - 1;
 		}
 	}
-	if (huosan_single > 0 && chong4_fix > 0) {
-		v[2] -= 1;
-	}
 
+	v[WIN] += tempv[WIN];
+	v[H4] += tempv[H4];
+	v[C4] += tempv[C4];
+	v[H3] += tempv[C4] ? 0:tempv[H3] ;
+	v[Q3] += tempv[C4] ? 0:tempv[Q3] ;
+	v[C3] += tempv[C3];
+	v[H2] += tempv[Q3]? 0: tempv[H2] ;
+	v[M2] += (tempv[C4]|tempv[C3] | tempv[Q3]|tempv[H3]|tempv[H2])? 0:tempv[M2];
 
 	return count;
 }
 
 
 /*由棋型估值*/
-int strTree::getScoreG(int vv[2][7]) {
-#ifdef DEBUG_main
-	int t = clock();
-#endif
+int strTree::getScoreG(int vv[2][SHAPE_TYPES]) {
+
 	const int* values = VALUE_GDEFAULT;
 	//我方权值
 	int score =
@@ -101,7 +134,8 @@ int strTree::getScoreG(int vv[2][7]) {
 		vv[0][3] * values[3] +
 		vv[0][4] * values[4] +
 		vv[0][5] * values[5] +
-		vv[0][6] * values[6]
+		vv[0][6] * values[6] +
+		vv[0][7] * values[7]
 		;
 	//对方权值
 	int _score =
@@ -111,18 +145,15 @@ int strTree::getScoreG(int vv[2][7]) {
 		vv[1][3] * values[3] +
 		vv[1][4] * values[4] +
 		vv[1][5] * values[5] +
-		vv[1][6] * values[6]
+		vv[1][6] * values[6] +
+		vv[1][7] * values[7]
 		;
-#ifdef DEBUG_main
-	timescore += clock() - t;
-#endif
+
 	return score - _score;
 }
 
 int strTree::getScoreG(int* v,int* _v) {
-#ifdef DEBUG_main
-	int t = clock();
-#endif
+
 	const int* values = VALUE_GDEFAULT;
 	//我方权值
 	int score =
@@ -132,7 +163,8 @@ int strTree::getScoreG(int* v,int* _v) {
 		v[3] * values[3] +
 		v[4] * values[4] +
 		v[5] * values[5] +
-		v[6] * values[6]
+		v[6] * values[6] +
+		v[7] * values[7]
 		;
 	//对方权值
 	int _score =
@@ -142,11 +174,10 @@ int strTree::getScoreG(int* v,int* _v) {
 		_v[3] * values[3] +
 		_v[4] * values[4] +
 		_v[5] * values[5] +
-		_v[6] * values[6]
+		_v[6] * values[6] +
+		_v[7] * values[7]
 		;
-#ifdef DEBUG_main
-	timescore += clock() - t;
-#endif
+
 	return score - _score;
 }
 
@@ -205,7 +236,7 @@ strTree* strTree::build(strTree* root) {
 	setTree(root, gshaps_qian3, 4);
 	setTree(root, gshaps_chong3, 5);
 	setTree(root, gshaps_huo2, 6);
-
+	setTree(root, gshaps_ming2, 7);
 
 	return root;
 }
@@ -218,6 +249,8 @@ strTree* strTree::build_oppo(strTree* root) {
 	setTree(root, gshaps_qian3_oppo, 4);
 	setTree(root, gshaps_chong3_oppo, 5);
 	setTree(root, gshaps_huo2_oppo, 6);
+	setTree(root, gshaps_ming2_oppo, 7);
+
 	return root;
 }
 

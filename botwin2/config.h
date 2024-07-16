@@ -9,6 +9,11 @@
 #include <time.h>
 #include <vector>
 
+
+#define FULLSEARCH
+
+
+
 #define DEBUG
 #define DEBUG_main
 #define DEBUG_POLICY
@@ -23,10 +28,11 @@ using namespace std;
 
 typedef pair<int, int> Pos;
 typedef uint64_t U64;
-
+#define SHAPE_TYPES 8
 
 
 //总体设置
+extern int START_DEPTH;
 extern int MAX_DEPTH ;
 extern int keepLen ;
 extern int range ;
@@ -52,20 +58,17 @@ extern const int ROW ;
 extern const int MAX_INT ;
 extern const int MIN_INT ;
 extern const int MAX_SEARCH_TIME_MS ;
-extern const int VALUE_DEFAULT[7];
-extern const int VALUE_DEFAULT_OPPO[7];
-extern const int VALUE_MUST_WIN ;
 
-extern const int VALUE_GDEFAULT[7];
+extern const int VALUE_GDEFAULT[SHAPE_TYPES];
 
 extern int time1;
 extern int tos4count ;
 extern int shape4count;
 extern int toscount ;
-extern int timescore4 ;
-extern int timescore ;
+extern int timemove ;
+extern int movecount ;
 extern int timepos ;
-extern int timepos1 ;
+extern int timereadtree ;
 extern int timetos ;
 extern int timetos4 ;
 extern int timetemp ;
@@ -90,6 +93,7 @@ extern const vector<string> gshaps_huo3;
 extern const vector<string> gshaps_qian3;
 extern const vector<string> gshaps_chong3;
 extern const vector<string> gshaps_huo2;
+extern const vector<string> gshaps_ming2;
 
 
 //公用棋型
@@ -102,7 +106,7 @@ extern const vector<string> gshaps_huo3_oppo;
 extern const vector<string> gshaps_qian3_oppo;
 extern const vector<string> gshaps_chong3_oppo;
 extern const vector<string> gshaps_huo2_oppo;
-
+extern const vector<string> gshaps_ming2_oppo;
 
 
 enum playerEnum
@@ -115,8 +119,9 @@ enum playerEnum
 playerEnum operator-(playerEnum p);
 
 enum shapeEnum {
-	WIN = 0, H4, C4, H3, Q3, C3, H2, 
+	WIN = 0, H4, C4, H3, Q3, C3, H2, M2
 };
+
 
 
 class hashTable;
