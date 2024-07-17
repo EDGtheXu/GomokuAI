@@ -101,7 +101,13 @@ int main()
 	btzrule();
 
 
-
-
+	//shapeHashTable;
+	//int t = clock();
+	//char s[16] = "0111100//100";
+	//for (int i = 0;i < 8500000;i++) {
+	//	shapeHashTable.hashFunction(s);
+	//	//strlen(s);
+	//}
+	//cout << clock() - t;
 	return 0;
 }

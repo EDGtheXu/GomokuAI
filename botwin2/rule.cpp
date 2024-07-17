@@ -13,8 +13,9 @@
 void btzrule() {
 	//³õÊ¼»¯×ÖµäÊ÷
 	strTree::initRoots();
-	shapeHashTable.init();
+	//shapeHashTable.init();
 	timereadtree = 0;
+	timeshape4 = 0;
 	shapeHashTable.hitCount = 0;
 	shapeHashTable.unHitCount = 0;
 

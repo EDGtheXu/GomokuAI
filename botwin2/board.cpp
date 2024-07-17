@@ -396,7 +396,7 @@ pair<int, int> board::policy()
 
 void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
 #ifdef DEBUG
-	int t = clock();
+	
 	shape4count+=1;
 #endif // DEBUG
 
@@ -422,16 +422,18 @@ void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
 //¶ÁÈ¡Ê÷
 	for (int i = 0;i < 4;i++) {
 		if (!strs[i])continue;
+		int t = clock();
 		DoubleShape vvv = shapeHashTable.getShape(nstrs[i],inds[i]);
+timeshape4 += clock() - t;
 		for (int i = 0;i < SHAPE_TYPES;i++) {
-			vv[0][i] += vvv[0][i];
-			vv[1][i] += vvv[1][i];
+			vv[0][i] += vvv.v[i];
+			vv[1][i] += vvv._v[i];
 		}
 	}
 
 
 #ifdef DEBUG
-	timeshape4 += clock() - t;
+	
 	timereadtree += clock() - tt;
 #endif // DEBUG
 }

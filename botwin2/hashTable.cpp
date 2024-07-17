@@ -19,7 +19,7 @@ int hashTable::hashFunction(char* str)
     int index = 0;
     int mul = 1;
     for (int i = len - 1;i >= 0;i--) {
-        index += mul * (str[i] == '0' ? 1 : (str[i] == '1' ? 2 : 3));
+        index += mul * (str[i]+2-'0');
 
 
         mul *= 3;
@@ -120,7 +120,7 @@ int* hashTable::find(char* str)
 DoubleShape hashTable::getShape(char* str,int in)
 {
     //×Ö·û´®²Ã¼ô
-    int tt = clock();
+    
 
     int s = in-1;
     int e = 1;
@@ -141,46 +141,43 @@ DoubleShape hashTable::getShape(char* str,int in)
     int s2 = s + 1;
     int e2 = in + e - 1;
 
-
-
+    
+int tt = clock();
     char* str1 = new char[12]{ 0 };
     memcpy(str1, str + s1, (e1 - s1 + 1) * sizeof(char));
     char* str2 = new char[12]{ 0 };
     memcpy(str2, str + s2, (e2 - s2 + 1) * sizeof(char));
 
+    
 
-    int* ans1 = new int[8]{ 0 };
-    int* ans2 = new int[8]{ 0 };
-    DoubleShape ans(ans1, ans2);
-/*
     int* ans1 = find(str1);
     int* ans2 = find(str2);
+ timetemp += clock() - tt;
     DoubleShape ans(ans1, ans2);
-    
+   
     
     if (ans1&&ans2) {
-        if (ans1[3])
-            int aa = 1;
+
         delete str1;
         delete str2;
-
+        
         return ans;
     }
-    */
-    timetemp += clock() - tt;
+
+
 
 
 
     //Î´²éµ½
     int* v = new int[SHAPE_TYPES]{ 0 };
-    if (ans1) {
+    if (!ans1) {
 
         tree1->get(str + s1, e1 - s1 + 1, v);
         AddItem(str1, v);
     }
     else delete str1;
     int* _v = new int[SHAPE_TYPES]{ 0 };
-    if (ans2) {
+    if (!ans2) {
 
         tree2->get(str + s2, e2 - s2 + 1, _v);
         AddItem(str2, _v);
@@ -194,7 +191,7 @@ DoubleShape hashTable::getShape(char* str,int in)
         int aa = 1;
     }
 
-
+    
 
     return ans;
 }
