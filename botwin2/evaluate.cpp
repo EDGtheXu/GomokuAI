@@ -14,20 +14,18 @@ int strTree::readTree(strTree* root, char* strs[], int count, int v[7])
 
 	for (int i = 0; i < count; i++) {
 		string t = strs[i];
-		c += root->get(strs[i], v);
+		c += root->get(strs[i], strlen(strs[i]), v);
 	}
 	return c;
 }
 /*获取单行棋型*/
-int strTree::get(const char* str, int v[7]) {
+int strTree::get(const char* str, int len,int v[7]) {
 	strTree* root = this;
 	int count = 0;
 	int back = 0;
 
 	int va = -1;
-	//int huosan_single = 0; //避免重复活三
-	//int huoer_single = 0;//避免重复活二
-	//int chong4_fix = 0;
+
 	int tempv[SHAPE_TYPES]{ 0 };
 	int debug = 0;
 
@@ -38,7 +36,6 @@ int strTree::get(const char* str, int v[7]) {
 	if (st >= skeepLen) {
 		str = str + st - skeepLen;
 	}
-	int len = strlen(str);
 	
 	//去掉后面的'0'
 	int en = len - 1;
@@ -49,7 +46,7 @@ int strTree::get(const char* str, int v[7]) {
 	if (en  < 5)//短字符串舍弃
 		return 0;
 	//获取棋型
-	for (int i = 0; i < en && back < en - 4; i++) {
+	for (int i = 0;  back <= en - 4; i++) {
 		if (str[i] == '/') {
 			if (root->l) root = root->l;
 			else {
@@ -89,32 +86,18 @@ int strTree::get(const char* str, int v[7]) {
 		}
 
 		if (root->valueIndex != -1) {
-			//if (root->valueIndex == H3||) {
-			//	huosan_single++;
-			//	if (huosan_single > 1) continue;
-			//}
-			//else if (root->valueIndex == C4) {
-			//	chong4_fix++;
-			//	if (chong4_fix > 1) continue;
-			//}
-
 			va = root->valueIndex;
-			//v[va] += 1;
 			tempv[va] = 1;
 			count++;
-
-			//root = this;
-			//back += 2;
-			//i = back - 1;
 		}
 	}
 
 	v[WIN] += tempv[WIN];
 	v[H4] += tempv[H4];
 	v[C4] += tempv[C4];
-	v[H3] += tempv[C4] ? 0:tempv[H3] ;
-	v[Q3] += tempv[C4] ? 0:tempv[Q3] ;
-	v[C3] += tempv[C3];
+	v[H3] += tempv[C4] ? 0 :tempv[H3] ;
+	v[Q3] += tempv[C4] ? 0 :tempv[Q3] ;
+	v[C3] += tempv[C4] ? 0 : tempv[C3];
 	v[H2] += tempv[Q3]? 0: tempv[H2] ;
 	v[M2] += (tempv[C4]|tempv[C3] | tempv[Q3]|tempv[H3]|tempv[H2])? 0:tempv[M2];
 

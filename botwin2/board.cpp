@@ -36,7 +36,48 @@ board::board(const board& b)
 	memcpy(chess, b.chess, sizeof(chess));
 }
 board::board(int chess[][15]) {
-	memcpy(this->chess, chess, sizeof(this->chess));
+
+	
+	turnToMove = ME;
+	turnToMoveOppo = -turnToMove;
+	moveCount = 0;
+
+	for (int i = 0;i < 15;i++) {
+		for (int j = 0;j < 15;j++) {
+			strs[0][i][j] = '0';
+			strs[1][i][j] = '0';
+
+		}
+		for (int j = 0; j <= i; j++)
+		{
+			strs[2][i][j] = '0';
+			strs[3][i][j] = '0';
+
+			strs[2][28 - i][j] = '0';
+			strs[3][28 - i][j] = '0';
+		}
+	}
+
+	initStrIndexs();
+	initZobrish();
+
+	int mask[15][15]{ 0 };
+	bool ex = true;
+	while (ex) {
+		ex = false;
+		for (int i = 0;i < 15;i++)
+			for (int j = 0;j < 15;j++) {
+
+				if (chess[i][j] == 1 && turnToMove == ME && !mask[i][j] ||
+					chess[i][j] == -1 && turnToMove == OPPO && !mask[i][j]
+					) {
+					mask[i][j] = 1;
+					ex = true;
+					move(i, j);
+				}
+			}
+	}
+
 }
 
 // ÖØÔØÊä³ö
@@ -362,24 +403,27 @@ void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
 	uint32_t indexs = getStrIndexs(pos);
 
 	char* nstrs[4]{};
+	
 	nstrs[3] = strs[3][indexs & 255];
 	indexs >>= 8;
 	nstrs[2] = strs[2][indexs & 255];
 	indexs >>= 8;
-	nstrs[1] = strs[1][indexs & 255];
+	uint8_t x2 = indexs & 255;
+	nstrs[1] = strs[1][x2];
 	indexs >>= 8;
-	nstrs[0] = strs[0][indexs & 255];
+	uint8_t x1 = indexs & 255;
+	nstrs[0] = strs[0][x1];
 
 #ifdef DEBUG
 	int tt = clock();
 #endif // DEBUG
 
-
+	uint8_t inds[4]{ x2,x1,x1 > x2 ? x2 : x1,x1 + x2 < 14 ? x1 : 14 - x2 };
 //¶ÁÈ¡Ê÷
 	for (int i = 0;i < 4;i++) {
 		if (!strs[i])continue;
-		int** vvv = shapeHashTable.getShape(nstrs[i]);
-		for (int i = 0;i < 7;i++) {
+		DoubleShape vvv = shapeHashTable.getShape(nstrs[i],inds[i]);
+		for (int i = 0;i < SHAPE_TYPES;i++) {
 			vv[0][i] += vvv[0][i];
 			vv[1][i] += vvv[1][i];
 		}
@@ -388,7 +432,7 @@ void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
 
 #ifdef DEBUG
 	timeshape4 += clock() - t;
-	timereadtree += clock() - t;
+	timereadtree += clock() - tt;
 #endif // DEBUG
 }
 

@@ -7,12 +7,20 @@
 #include "board.h"
 
 
+
+
+
+
+
 int main()
 {
 
-
-
 	/*
+	strTree::initRoots();
+	
+
+
+
 	int arr[15][15]{
 		0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -30,6 +38,9 @@ int main()
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	};
+
+
+
 	for (int i = 0;i < 14;i++)
 		for (int j = i+1;j < 15;j++) {
 			//swap(arr[i][j], arr[j][i]);
@@ -43,13 +54,18 @@ int main()
 	board* mb = new board(arr);
 	cout << *mb << endl;
 	strTree::initRoots();
-	pair<int, int> p(5, 0);
+	pair<int, int> p(5, 5);
+
+	int vv[2][8]{ 0 };
+
+	mb->getShapes4(p, vv);
 
 
-	int v[7]{ 0 };
-	int _v[7]{ 0 };
+	return 0;
+	*/
 
 
+	/*
 	int tttt=clock();
 	char* strs[4];
 	

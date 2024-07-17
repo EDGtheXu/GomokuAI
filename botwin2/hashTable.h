@@ -172,14 +172,14 @@ public:
     }
     inline int getsize() { return size; }
     inline int getstate() { return state; }
-    inline bool keyEmpty(K k) { return !keyCmp(k, keyNull()); }
+    virtual inline bool keyEmpty(K k) { return !keyCmp(k, keyNull()); }
     inline bool valueEmpty(V v) { return valueEqual(v, valueNull()); };
-
+    virtual int hashFunction(K str) = 0;//哈希函数
 //哈希可重写方法
 protected:
     int state;//状态值，-1为找空，>=为链表的索引值
 
-    virtual int hashFunction(K str) = 0;//哈希函数
+
     virtual int keyCmp(K k1, K k2){return k1 != k2;}
     virtual int valueEqual(V v1, V v2) { return v1 == v2; }
     virtual V valueNull() { return nullptr; }
@@ -190,29 +190,44 @@ protected:
 
 
 
+class DoubleShape {
+public :
+    int* v;
+    int* _v;
+
+    DoubleShape(int* v1, int* v2) :v(v1), _v(v2) {}
+    int*& operator[](int index) {
+        return index == 0 ? v : _v;
+    }
+};
 
 
 
-
-class hashTable:public basehashTable<char*,int**>
+class hashTable:public basehashTable<char*,int*>
 {
 //重写方法
 public:
     
-    inline hashTable() :basehashTable<char*, int**>(100000) {};
+    inline hashTable() :basehashTable<char*, int*>(100000) {};
     inline ~hashTable() {};
-
-protected:
     int hashFunction(char* str);
-    inline int keyCmp(const char*& k1, const char*& k2) { return strcmp(k1, k2); }
+    int hashFunction(char* str,int len);
+
+    
+protected:
+
+    inline bool keyEmpty(char* k) { return k==nullptr; }
     inline char* keyNull() { return nullptr; }
+    int keyCmp(char* k1, char* k2) { return strcmp( k1 , k2); }
+
+    inline int* find(char* str);
 
 //独有方法
 public:
     void PrintTable();
     void PrintItemsInIndex(int index);
     void init();
-    int** getShape(char* str);
+    DoubleShape getShape(char* str,int in);
     void generateStrings(string current, int len, int maxLength, int samecount);
 };
 

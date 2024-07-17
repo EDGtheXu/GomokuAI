@@ -64,7 +64,7 @@ const vector<string> gshaps_huo3 = { "011100","001110"};
 const vector<string> gshaps_qian3 = { "011010","010110" };
 const vector<string> gshaps_chong3 = { "11100","11010","11001","10110","10101","10011",   "00111","01011","01101","01110" };
 const vector<string> gshaps_huo2 = { "001100","010100","001010","010010" };
-const vector<string> gshaps_ming2 = { "11000","10100","10010",  "00011","00101","01001" };
+const vector<string> gshaps_ming2 = { "11000","10100","10010",  "00011","00101","01001" ,"01010","01100" ,"00110"};
 
 //¹«ÓÃÆåÐÍ
 const vector<string> gshaps_win_oppo = { "/////" };
@@ -74,7 +74,7 @@ const vector<string> gshaps_huo3_oppo = { "0///00","00///0"};
 const vector<string> gshaps_qian3_oppo = { "0//0/0","0/0//0" };
 const vector<string> gshaps_chong3_oppo = { "///00","//0/0","//00/","/0//0","/0/0/","/00//",   "00///","0/0//","0//0/",  "0///0" };
 const vector<string> gshaps_huo2_oppo = { "00//00","00/0/0","0/0/00","0/00/0" };
-const vector<string> gshaps_ming2_oppo = { "//000","/0/00","/00/0",  "000//","00/0/","0/00/" };
+const vector<string> gshaps_ming2_oppo = { "//000","/0/00","/00/0",  "000//","00/0/","0/00/","0/0/0","0//00" ,"00//0" };
 
 
 playerEnum operator-(playerEnum p) {
