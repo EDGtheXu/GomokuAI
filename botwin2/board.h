@@ -27,7 +27,6 @@ class board
 {
 public:
 	int chess[15][15];
-	int rchess[15][15];
 
 	//ÆåÐÍ£ºME  OPPO
 	int shapes[2][SHAPE_TYPES]{0};
@@ -88,7 +87,15 @@ public:
 	inline uint32_t getStrIndexs(Pos pos) {
 		return strIndexs[pos.first][pos.second];
 	}
-
+	class FORINT {
+	public:
+		int a1;
+		int a2;int a3;int a4;
+		FORINT(int c1, int c2, int c3, int c4) :a1(c1), a2(c2), a3(c3), a4(c4) {}
+	};
+	inline uint32_t getStrIndexs(Pos pos) {
+		return strIndexs[pos.first][pos.second];
+	}
 	inline void changeStr(playerEnum p,Pos pos) {
 		uint32_t indexs = getStrIndexs(pos);
 		uint8_t x2 = (indexs>>16) & 255;
@@ -349,19 +356,27 @@ public:
 	//ÒÆ¶¯
 	inline void setChess(playerEnum p, Pos pos) {
 		chess[pos.first][pos.second] = p;
-		rchess[pos.first][pos.second] = -p;
-		changeStr(p, pos);
-		
-	}
-	inline void move(Pos pos) {
 #ifdef DEBUG
 		int t = clock();
 		movecount++;
 #endif // DEBUG
+		changeStr(p, pos);
+#ifdef DEBUG
+		timemove += clock() - t;
+#endif // DEBUG
+	}
+	inline void move(Pos pos) {
+
 
 		removeMoveShape(pos);
+
+
 		setChess(turnToMove,pos);
+
+
 		addMoveShape(pos);
+
+
 		zobristKey ^= zobrist[turnToMove==ME?0:1][pos.first][pos.second];
 		historyMoves[moveCount] = pos;
 
@@ -370,9 +385,7 @@ public:
 		turnToMoveOppo = -turnToMoveOppo;
 		moveCount++;
 
-#ifdef DEBUG
-		timemove += clock() - t;
-#endif // DEBUG
+
 
 	}
 	inline void move(int x,int y) {

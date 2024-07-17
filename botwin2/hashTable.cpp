@@ -84,116 +84,29 @@ void hashTable::PrintItemsInIndex(int index)
     }
 }
 
-int* hashTable::find(char* str)
+
+
+int** hashTable::getShape(char* str)
 {
-    int index = hashFunction(str);
-    bool FindName = false;
+    int** ans = find(str);
+    if (ans) {
 
-    int* v = valueNull();
-    item* p = HashTable[index];
-
-    state = -1;
-    while (p != nullptr)
-    {
-        state++;
-        if (!keyEmpty(p->key) && !keyCmp(p->key, str))
-        {
-            FindName = true;
-            v = p->value;
-            break;
-        }
-        p = p->next;
-    }
-    if (!FindName) {
-        state = -1;
-        unHitCount++;
-    }
-    else {
-        hitCount++;
-    }
-
-
-    return v;
-}
-
-
-DoubleShape hashTable::getShape(char* str,int in)
-{
-    //×Ö·û´®²Ã¼ô
-    
-
-    int s = in-1;
-    int e = 1;
-    char* p = str+in-1;
-    for (int d = -1;d >= -5 && *p != '/' && s >= 0;d--, p--, s--);
-    p = str+in+1;
-    for (;e <= 5 && *p != '/' && p;e++, p++);
-    int s1 = s + 1;
-    int e1 = in + e - 1;
-   
-
-    s = in - 1;
-    e = 1;
-    p = str + in - 1;
-    for (int d = -1;d >= -5 && *p != '1' && s >= 0;d--, p--, s--);
-    p = str + in + 1;
-    for (;e <= 5 && *p != '1' && p;e++, p++);
-    int s2 = s + 1;
-    int e2 = in + e - 1;
-
-    
-int tt = clock();
-    char* str1 = new char[12]{ 0 };
-    memcpy(str1, str + s1, (e1 - s1 + 1) * sizeof(char));
-    char* str2 = new char[12]{ 0 };
-    memcpy(str2, str + s2, (e2 - s2 + 1) * sizeof(char));
-
-    
-
-    int* ans1 = find(str1);
-    int* ans2 = find(str2);
- timetemp += clock() - tt;
-    DoubleShape ans(ans1, ans2);
-   
-    
-    if (ans1&&ans2) {
-
-        delete str1;
-        delete str2;
-        
         return ans;
     }
 
 
-
-
-
     //Î´²éµ½
-    int* v = new int[SHAPE_TYPES]{ 0 };
-    if (!ans1) {
+    int* v = new int[7]{ 0 };
+    int* _v = new int[7]{ 0 };
+    int** vv = new int* [2]{ v,_v };
 
-        tree1->get(str + s1, e1 - s1 + 1, v);
-        AddItem(str1, v);
-    }
-    else delete str1;
-    int* _v = new int[SHAPE_TYPES]{ 0 };
-    if (!ans2) {
 
-        tree2->get(str + s2, e2 - s2 + 1, _v);
-        AddItem(str2, _v);
-    }
-    else delete str2;
-    ans[0] = v;
-    ans[1] = _v;
+    tree1->get(str, v);
+    tree2->get(str, _v);
+
+    AddItem(str, vv);
     state = -1;
-
-    if (ans[0][3] != 0) {
-        int aa = 1;
-    }
-
-    
-
-    return ans;
+    return vv;
 }
 
 
@@ -219,8 +132,8 @@ void hashTable::generateStrings(string current, int len, int maxLength, int same
         int* v = new int[7]{ 0 };
         int* _v = new int[7]{ 0 };
         int** vv = new int* [2]{ v,_v };
-        tree1->get(current.c_str(), len, v);
-        tree2->get(current.c_str(), len,_v);
+        tree1->get(current.c_str(),  v);
+        tree2->get(current.c_str(), _v);
 
 
         char* nstr = new char[maxLength + 1]{ 0 };

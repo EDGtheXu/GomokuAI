@@ -203,12 +203,12 @@ public :
 
 
 
-class hashTable:public basehashTable<char*,int*>
+class hashTable:public basehashTable<char*,int**>
 {
 //重写方法
 public:
     
-    inline hashTable() :basehashTable<char*, int*>(100000) {};
+    inline hashTable() :basehashTable<char*, int**>(100000) {};
     inline ~hashTable() {};
     int hashFunction(char* str);
     int hashFunction(char* str,int len);
@@ -220,14 +220,13 @@ protected:
     inline char* keyNull() { return nullptr; }
     int keyCmp(char* k1, char* k2) { return strcmp( k1 , k2); }
 
-    inline int* find(char* str);
 
 //独有方法
 public:
     void PrintTable();
     void PrintItemsInIndex(int index);
     void init();
-    DoubleShape getShape(char* str,int in);
+    int** getShape(char* str);
     void generateStrings(string current, int len, int maxLength, int samecount);
 };
 

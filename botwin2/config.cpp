@@ -6,7 +6,7 @@ static std::mt19937_64 random(time(NULL));
 
 //总体设置
 int START_DEPTH = 2;
-int MAX_DEPTH = 10;
+int MAX_DEPTH = 5;
 int keepLen = 10;
 int range = 2;
 int MAX_VCT_DEPTH = 7;//VCT可扩展层数

@@ -14,12 +14,12 @@ int strTree::readTree(strTree* root, char* strs[], int count, int v[7])
 
 	for (int i = 0; i < count; i++) {
 		string t = strs[i];
-		c += root->get(strs[i], strlen(strs[i]), v);
+		c += root->get(strs[i], v);
 	}
 	return c;
 }
 /*获取单行棋型*/
-int strTree::get(const char* str, int len,int v[7]) {
+int strTree::get(const char* str, int v[7]) {
 	strTree* root = this;
 	int count = 0;
 	int back = 0;
@@ -38,7 +38,7 @@ int strTree::get(const char* str, int len,int v[7]) {
 	}
 	
 	//去掉后面的'0'
-	int en = len - 1;
+	int en = strlen(str) - 1;
 	int c = 0;
 	while (str[en--] == '0') c++;
 	en += (2+(c>skeepLen?skeepLen:c));

@@ -7,7 +7,6 @@
 board::board()
 {
 	memset(chess, EMPTY, sizeof(chess));
-	memset(rchess, EMPTY, sizeof(rchess));
 	turnToMove = ME;
 	turnToMoveOppo = -turnToMove;
 	moveCount = 0;
@@ -33,7 +32,7 @@ board::board()
 }
 board::board(const board& b)
 {
-	memcpy(chess, b.chess, sizeof(chess));
+	//memcpy(chess, b.chess, sizeof(chess));
 }
 board::board(int chess[][15]) {
 
@@ -418,16 +417,15 @@ void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
 	int tt = clock();
 #endif // DEBUG
 
-	uint8_t inds[4]{ x2,x1,x1 > x2 ? x2 : x1,x1 + x2 < 14 ? x1 : 14 - x2 };
 //¶ÁÈ¡Ê÷
 	for (int i = 0;i < 4;i++) {
 		if (!strs[i])continue;
 		int t = clock();
-		DoubleShape vvv = shapeHashTable.getShape(nstrs[i],inds[i]);
+		int** vvv = shapeHashTable.getShape(nstrs[i]);
 timeshape4 += clock() - t;
 		for (int i = 0;i < SHAPE_TYPES;i++) {
-			vv[0][i] += vvv.v[i];
-			vv[1][i] += vvv._v[i];
+			vv[0][i] += vvv[0][i];
+			vv[1][i] += vvv[1][i];
 		}
 	}
 
