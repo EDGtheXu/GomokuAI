@@ -11,6 +11,9 @@
 
 
 void btzrule() {
+
+
+
 	//³õÊ¼»¯×ÖµäÊ÷
 	strTree::initRoots();
 	//shapeHashTable.init();
@@ -20,7 +23,6 @@ void btzrule() {
 	shapeHashTable.unHitCount = 0;
 
 
-	cout << "over" << endl;
 
 	board mb;
 	int x, y, n;
@@ -33,6 +35,13 @@ void btzrule() {
 		cin >> x >> y;
 		if (!(x == -1 && y == -1)) {
 			mb.move(x, y);
+		}
+		else {
+			if (n == 1) {
+				cout << 7 << ' ' << 7;
+				return;
+			}
+
 		}
 	}
 
@@ -56,7 +65,9 @@ void btzrule() {
 	TIMEBEGIN = clock();
 #endif // 
 
-
+#ifdef DEBUG_BOTZONE
+	int botTime = clock();
+#endif // DEBUG_BOTZONE
 
 	pair<int, int> p = mb.policy();
 	cout << p.first << ' ' << p.second << endl;
@@ -64,8 +75,7 @@ void btzrule() {
 
 
 #ifdef DEBUG_BOTZONE
-	cout << "value:" << mb->lastValue << endl;
-	cout << "time:"<<clock() - t << endl;
+	cout << "value:" << mb.lastValue << ", time:"<<clock() - botTime << endl;
 #endif // DEBUG_BOTZONE
 
 

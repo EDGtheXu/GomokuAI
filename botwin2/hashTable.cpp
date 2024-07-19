@@ -88,22 +88,23 @@ void hashTable::PrintItemsInIndex(int index)
 
 int** hashTable::getShape(char* str)
 {
+    int tt = clock();
     int** ans = find(str);
     if (ans) {
-
+        
         return ans;
     }
-
-
+    
+    
     //δ�鵽
-    int* v = new int[7]{ 0 };
-    int* _v = new int[7]{ 0 };
+    int* v = new int[SHAPE_TYPES]{ 0 };
+    int* _v = new int[SHAPE_TYPES]{ 0 };
     int** vv = new int* [2]{ v,_v };
 
 
     tree1->get(str, v);
     tree2->get(str, _v);
-
+    timetemp += clock() - tt;
     AddItem(str, vv);
     state = -1;
     return vv;

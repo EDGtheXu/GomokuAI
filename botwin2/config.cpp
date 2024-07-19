@@ -6,11 +6,30 @@ static std::mt19937_64 random(time(NULL));
 
 //总体设置
 int START_DEPTH = 2;
-int MAX_DEPTH = 5;
-int keepLen = 10;
+int MAX_DEPTH = 8;
+
 int range = 2;
+
+int LC_DELTA = 50;//坏点与最大估值的差值
+int LC_LOW = -10000;//坏点必输值
+
+int LC_KEEP = 15;//LC保留分支数
+int TT_KEEP = 15;//置换表保留分支数
+int keepLen = 30;//最大保留分支数(按层递减)
+int keepLenMin = 10;//最小保留分支数
+
+
 int MAX_VCT_DEPTH = 7;//VCT可扩展层数
 int MAX_VCF_DEPTH = 25;//VCF可扩展层数
+
+
+
+
+
+
+
+
+
 
 
 //开局设置
@@ -20,7 +39,7 @@ int keepLen_INIT = 13;
 int range_INIT = 2;
 
 //僵局设置
-int step_FINA = 40;
+int step_FINA = 100;
 int MAX_DEPTH_FINA = 5;
 int keepLen_FINA = 20;
 int range_FINA = 2;
@@ -33,7 +52,12 @@ const int MAX_INT = 0x3f3f3f3f;
 const int MIN_INT = -MAX_INT;
 const int MAX_SEARCH_TIME_MS = 0.95 * CLOCKS_PER_SEC;
 
-const int VALUE_GDEFAULT[SHAPE_TYPES]{ 200     ,	  100     ,      10      ,      10   ,       5     ,     3       ,     3    ,  1 };
+const int VALUE_GDEFAULT[SHAPE_TYPES]{	//	权重
+			200		,					//	WIN
+			100		,	20	,			//	H4		C4
+			15		,	12	,	8	,   //	H3		Q3		C3
+			6		,	4				//	H2		M2
+};
 
 int time1;
 int tos4count = 0;
