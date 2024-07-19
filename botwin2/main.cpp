@@ -14,6 +14,15 @@
 
 int main()
 {
+	/*
+	strTree::initRoots();
+	board b;
+	b.move(1, 3);
+	int vv[2][8]{ 0 };
+	b.getShapes4(Pos(1, 3),vv);
+	b.undo();
+	*/
+
 
 	/*
 	strTree::initRoots();

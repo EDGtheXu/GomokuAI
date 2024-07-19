@@ -203,15 +203,46 @@ public :
 
 
 
-class hashTable:public basehashTable<char*,int**>
+class hashTable:public basehashTable<char*,int>
 {
 //÷ÿ–¥∑Ω∑®
 public:
     
-    inline hashTable() :basehashTable<char*, int**>(100000) {};
+    inline hashTable() :basehashTable<char*, int>(100000) {};
     inline ~hashTable() {};
-    int hashFunction(char* str);
-    int hashFunction(char* str,int len);
+    int hashFunction(uint32_t code);
+    int hashFunction(char*);
+    int find(char* str, uint32_t code)
+    {
+        uint32_t index = hashFunction(code);
+        bool FindName = false;
+
+        int v = -1;
+        item* p = HashTable[index];
+
+        state = -1;
+        while (p != nullptr)
+        {
+            state++;
+            if (p->key)
+            {
+                FindName = true;
+                v = p->value;
+                break;
+            }
+            p = p->next;
+        }
+        if (!FindName) {
+            state = -1;
+            unHitCount++;
+        }
+        else {
+            hitCount++;
+        }
+
+
+        return v;
+    }
 
     
 protected:
@@ -226,8 +257,9 @@ public:
     void PrintTable();
     void PrintItemsInIndex(int index);
     void init();
-    int** getShape(char* str);
+    int getShape(char* str,int code);
     void generateStrings(string current, int len, int maxLength, int samecount);
+
 };
 
 

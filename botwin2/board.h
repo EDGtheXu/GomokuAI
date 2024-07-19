@@ -50,8 +50,9 @@ public:
 	int shapes[2][SHAPE_TYPES]{0};
 
 	//字符串：行  列  主  副
-	char strs[4][29][16] { '0' };
-	int strsHash[4][29]{ 0 };
+	char strs[4][29][16] { 0 };
+	uint32_t strsHash[4][29]{ 0 };
+	int endIndex[4][29]{};
 
 private:
 	//行号 列号 方向 字符串索引/字符索引
@@ -99,6 +100,7 @@ public:
 				strIndexs[i][j][3][1] = i + j < 14 ? i : 14 - j;
 
 
+
 			}
 		}
 	}
@@ -110,19 +112,27 @@ public:
 		FIFINT(int c1, int c2, int c3, int c4) :a1(c1), a2(c2), a3(c3), a4(c4) {}
 	};
 
-	inline void changeStr(playerEnum p,Pos pos) {
+	inline void moveChangeStr(playerEnum p,Pos pos) {
 		int i = pos.first;
 		int j = pos.second;
 
 		for (int k = 0;k < 4;k++) {
 
 			int* ins = strIndexs[i][j][k];
+
 			strs[k][ins[0]][ins[1]] = p + '0';
-			p == EMPTY?strsHash[k][ins[0]] += (p + 1) * ins[1] * p;
+uint32_t a = ((p==1?2:1) << (ins[1] * 2));
+			strsHash[k][ins[0]] -= a;// 00:无棋盘  01:ME  10:OPPO  11:空棋盘
+			
+			
 		}
 	}
 
-	inline void undoChangeStr( Pos pos) {
+	uint32_t strMask[3]{
+
+	};
+
+	inline void undoChangeStr(Pos pos) {
 		int i = pos.first;
 		int j = pos.second;
 
@@ -130,7 +140,8 @@ public:
 
 			int* ins = strIndexs[i][j][k];
 			strs[k][ins[0]][ins[1]] = '0';
-			strsHash[k][ins[0]] -= (p + 1) * ins[1] * p;
+			int a = ((chess[i][j] == 1 ? 2 : 1) << (ins[1]*2));
+			strsHash[k][ins[0]] += a;
 		}
 	}
 
@@ -145,6 +156,8 @@ public:
 
 			shapesChange[0][i] += vv[0][i];
 			shapesChange[1][i] += vv[1][i];
+
+
 		}
 	}
 	inline void removeMoveShape(Pos pos) {
@@ -451,7 +464,7 @@ public:
 	//移动
 	inline void setChess(playerEnum p, Pos pos) {
 		chess[pos.first][pos.second] = p;
-		changeStr(p, pos);
+
 	}
 
 	inline void move(Pos pos) {
@@ -462,6 +475,7 @@ public:
 
 		removeMoveShape(pos);
 		setChess(turnToMove,pos);
+		moveChangeStr(turnToMove, pos);
 		addMoveShape(pos);
 		zobristKey ^= zobrist[turnToMove==ME?0:1][pos.first][pos.second];
 		historyMoves[moveCount] = pos;
@@ -491,6 +505,7 @@ public:
 		moveCount--;
 		Pos p = historyMoves[moveCount];
 		removeMoveShape(p);
+		undoChangeStr( p);
 		setChess(EMPTY,p);
 		addMoveShape(p);
 		zobristKey ^= zobrist[turnToMoveOppo==ME?0:1][p.first][p.second];

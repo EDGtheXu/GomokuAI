@@ -8,109 +8,43 @@ strTree* tree2 = nullptr;
 
 /*获取棋型*/
 
-int strTree::readTree(strTree* root, char* strs[], int count, int v[7])
+int strTree::readTree(strTree* root, char* strs[], int count, int v[SHAPE_TYPES])
 {
 	int c = 0;
 
 	for (int i = 0; i < count; i++) {
 		string t = strs[i];
-		c += root->get(strs[i], v);
+		c += root->get(strs[i], v,strlen(strs[i]));
 	}
 	return c;
 }
 /*获取单行棋型*/
-int strTree::get(const char* str, int v[7]) {
+int strTree::get(const char* str) {
 	strTree* root = this;
-	int count = 0;
-	int back = 0;
-
 	int va = -1;
 
-	int tempv[SHAPE_TYPES]{ 0 };
-	int debug = 0;
-
-
-	//去掉前面的'0'
-	int st = 0;
-	while (str[st] == '0') st++;
-	if (st >= skeepLen) {
-		str = str + st - skeepLen;
-	}
-	
-	//去掉后面的'0'
-	int en = strlen(str) - 1;
-	int c = 0;
-	while (str[en--] == '0') c++;
-	en += (2+(c>skeepLen?skeepLen:c));
-
-	if (en  < 5)//短字符串舍弃
-		return 0;
 	//获取棋型
-	for (int i = 0;  str[i] && back <= en - 4; i++) {
+	for (int i = 0;  str[i] && i<6 ; i++) {
 		if (str[i] == '/') {
 			if (root->l) root = root->l;
-			else {
-				root = this;
-				if (va != -1) {
-					back += 1;//已匹配到
-					//if(va==C4||va==H3)
-				}
-				else back++;
-				i = back - 1;
-				va = -1;
-			}
+			else break;
 		}
 		else if (str[i] == '0') {
 			if (root->m) root = root->m;
-			else {
-				root = this;
-				if (va != -1) {
-					back += 1;
-				}
-				else back++;
-				i = back - 1;
-				va = -1;
-			}
+			else break;
 		}
 		else if (str[i] == '1') {
 			if (root->r)  root = root->r;
-			else {
-				root = this;
-				if (va != -1) {
-					back += 1;
-				}
-				else back++;
-				i = back - 1;
-				va = -1;
-			}
+			else break;
 		}
-		else {
-			root = this;
-			if (va != -1) {
-				back += 1;
-			}
-			else back++;
-			i = back - 1;
-			va = -1;
-		}
+		else break;
 
 		if (root->valueIndex != -1) {
-			va = root->valueIndex;
-			tempv[va] = 1;
-			count++;
+			va = root->valueIndex<va? root->valueIndex:va;
 		}
 	}
 
-	v[WIN] += tempv[WIN];
-	v[H4] += tempv[H4];
-	v[C4] += tempv[C4];
-	v[H3] += tempv[C4] ? 0 :tempv[H3] ;
-	v[Q3] += tempv[C4] ? 0 :tempv[Q3] ;
-	v[C3] += tempv[C4]||tempv[H3]||tempv[Q3] ? 0 : tempv[C3];
-	v[H2] += tempv[Q3]? 0: tempv[H2] ;
-	v[M2] += (tempv[C4]|tempv[C3] | tempv[Q3]|tempv[H3]|tempv[H2])? 0:tempv[M2];
-
-	return count;
+	return va;
 }
 
 

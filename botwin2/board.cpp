@@ -16,6 +16,11 @@ board::board()
 			strs[0][i][j] = '0';
 			strs[1][i][j] = '0';
 
+			strsHash[0][i] |= (3 << j);
+			strsHash[1][i] |= (3 << j);
+
+			
+
 		}
 		for (int j = 0; j <= i; j++)
 		{
@@ -24,7 +29,21 @@ board::board()
 
 			strs[2][28-i][j] = '0';
 			strs[3][28-i][j] = '0';
+
+
+			strsHash[2][i] |= (3 << j);
+			strsHash[3][i] |= (3 << j);
+
+			strsHash[2][28 - i] |= (3 << j);
+			strsHash[3][28 - i] |= (3 << j);
 		}
+		endIndex[0][i] = 14;
+		endIndex[1][i] = 14;
+		endIndex[2][i] = i;
+		endIndex[3][i] = i;
+		endIndex[2][28-i] = i;
+		endIndex[3][28-i] = i;
+
 	}
 
 	initStrIndexs();
@@ -426,13 +445,17 @@ void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
 
 #ifdef DEBUG
 	int t = clock();
-	shape4count+=1;
+	shape4count += 1;
 #endif // DEBUG
 
 	char* nstrs[4]{};
+	uint32_t hashstr[4]{ 0 };
 	
-	for (int i = 0;i < 4;i++)
-		nstrs[i] = strs[i][strIndexs[pos.first][pos.second][i][0]];
+	for (int i = 0;i < 4;i++) {
+		int* ins = strIndexs[pos.first][pos.second][i];
+		nstrs[i] = strs[i][ins[0]];
+		hashstr[i] = strsHash[i][ins[0]];
+	}
 
 
 #ifdef DEBUG
@@ -441,9 +464,35 @@ void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
 
 //¶ÁÈ¡Ê÷
 	for (int i = 0;i < 4;i++) {
-		if (!strs[i])continue;
+		int* ins = strIndexs[pos.first][pos.second][i];
+		int indexStr = ins[0];
+		int index = ins[1];
+		int s = index > 5 ? index - 5 : 0;
+		int e = endIndex[i][indexStr]-index>5?index+5: endIndex[i][indexStr];
+		int len = e - s;
+		int l = (endIndex[i][indexStr] - e)*2;
+		int r = (2 * s + l);
 
-		int** vvv = shapeHashTable.getShape(nstrs[i]);
+		uint32_t mask = 0;
+		for (int j = index-1;j >= s;j--) {
+			if (nstrs[i][j] == '/')break;
+mask <<= 2;
+			mask &= 3;
+			
+		}
+		for (int j = index + 1;j <= e;j++) {
+			if (nstrs[i][j] == '/')break;
+mask <<= 2;
+			mask &= 3;
+			
+		}
+
+		hashstr[i] <<= l;
+		hashstr[i] >>= r;
+
+
+
+		int** vvv = shapeHashTable.getShape(nstrs[i]+s,hashstr[i],len+1);
 
 		for (int j = 0;j < SHAPE_TYPES;j++) {
 			vv[0][j] += vvv[0][j];
@@ -466,20 +515,35 @@ bool board::checkImportantShapes4(pair<int, int> pos) {
 #endif // DEBUG
 
 	char* nstrs[4]{};
+	uint32_t hashstr[4]{ 0 };
 
-	for (int i = 0;i < 4;i++)
-		nstrs[i] = strs[i][strIndexs[pos.first][pos.second][i][0]];
+	for (int i = 0;i < 4;i++) {
+		int* ins = strIndexs[pos.first][pos.second][i];
+		nstrs[i] = strs[i][ins[0]];
+		hashstr[i] = strsHash[i][ins[0]];
+	}
 
 
 #ifdef DEBUG
 	int tt = clock();
 #endif // DEBUG
-	int count = 0;
+
 	//¶ÁÈ¡Ê÷
 	for (int i = 0;i < 4;i++) {
-		if (!strs[i])continue;
+		int* ins = strIndexs[pos.first][pos.second][i];
+		int indexStr = ins[0];
+		int index = ins[1];
+		int s = index > 5 ? index - 5 : 0;
+		int e = endIndex[i][indexStr] - index > 5 ? index + 5 : endIndex[i][indexStr];
+		int len = e - s;
+		int l = (endIndex[i][indexStr] - e) * 2;
+		int r = (2 * s + l);
+		hashstr[i] <<= l;
+		hashstr[i] >>= r;
 
-		int** vvv = shapeHashTable.getShape(nstrs[i]);
+
+
+		int** vvv = shapeHashTable.getShape(nstrs[i] + s, hashstr[i], len+1);
 
 		for (int j = 0;j < SHAPE_TYPES - 1 ;j++) {
 			if (vvv[0][j] || vvv[1][j]) {

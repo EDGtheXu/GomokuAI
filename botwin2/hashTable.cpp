@@ -13,32 +13,15 @@
 
 
 
+int hashTable::hashFunction(uint32_t code)
+{
+
+    return code % tableSize;
+}
+
 int hashTable::hashFunction(char* str)
 {
     int len = strlen(str);
-    int index = 0;
-    int mul = 1;
-    for (int i = len - 1;i >= 0;i--) {
-        index += mul * (str[i]+2-'0');
-
-
-        mul *= 3;
-    }
-    index = index % tableSize;
-
-    /*
-    cout << "key[0] = " << key[0] << endl;
-    cout << "key[0] = " << static_cast<int>(key[0]) << endl;
-    cout << "key[1] = " << key[1] << endl;
-    cout << "key[2] = " << key[2] << endl;
-    cout << "sum = " << sum << endl;
-    cout << "index = " << index << endl << endl;
-    */
-    return index;
-}
-
-int hashTable::hashFunction(char* str,int len)
-{
     int index = 0;
     int mul = 1;
     for (int i = len - 1;i >= 0;i--) {
@@ -86,10 +69,11 @@ void hashTable::PrintItemsInIndex(int index)
 
 
 
-int** hashTable::getShape(char* str)
+int hashTable::getShape(char* str, int code)
 {
     int tt = clock();
-    int** ans = find(str);
+
+    int ans = find(str, code);
     if (ans) {
         
         return ans;
@@ -97,17 +81,19 @@ int** hashTable::getShape(char* str)
     
     
     //δ�鵽
-    int* v = new int[SHAPE_TYPES]{ 0 };
-    int* _v = new int[SHAPE_TYPES]{ 0 };
-    int** vv = new int* [2]{ v,_v };
 
+    int res = tree1->get(str);
+    AddItem(str, res);
+    if(res!=-1) return res;
 
-    tree1->get(str, v);
-    tree2->get(str, _v);
-    timetemp += clock() - tt;
-    AddItem(str, vv);
+    int res = tree2->get(str);
+    AddItem(str, res);
+    if (res != -1) return res;
+    
     state = -1;
-    return vv;
+    timetemp += clock() - tt;
+
+    return -1;
 }
 
 
@@ -133,8 +119,8 @@ void hashTable::generateStrings(string current, int len, int maxLength, int same
         int* v = new int[7]{ 0 };
         int* _v = new int[7]{ 0 };
         int** vv = new int* [2]{ v,_v };
-        tree1->get(current.c_str(),  v);
-        tree2->get(current.c_str(), _v);
+        tree1->get(current.c_str());
+        tree2->get(current.c_str());
 
 
         char* nstr = new char[maxLength + 1]{ 0 };

@@ -28,7 +28,7 @@ public:
 	strTree* r;
 
 	strTree(int v, char ch);
-	int get(const char* str, int v[7]);
+	int get(const char* str);
 	//int getArea()
 
 
