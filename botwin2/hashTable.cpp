@@ -71,29 +71,25 @@ void hashTable::PrintItemsInIndex(int index)
 
 int hashTable::getShape(char* str, int code)
 {
-    int tt = clock();
-
-    int ans = find(str, code);
+    int** ans = find(str);
     if (ans) {
-        
+
         return ans;
     }
-    
-    
+
+
     //δ�鵽
+    int* v = new int[7]{ 0 };
+    int* _v = new int[7]{ 0 };
+    int** vv = new int* [2]{ v,_v };
 
-    int res = tree1->get(str);
-    AddItem(str, res);
-    if(res!=-1) return res;
 
-    int res = tree2->get(str);
-    AddItem(str, res);
-    if (res != -1) return res;
-    
+    tree1->get(str, v);
+    tree2->get(str, _v);
+
+    AddItem(str, vv);
     state = -1;
-    timetemp += clock() - tt;
-
-    return -1;
+    return vv;
 }
 
 

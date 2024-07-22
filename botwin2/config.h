@@ -10,7 +10,8 @@
 #include <vector>
 
 
-//#define FULLSEARCH
+#define FULLSEARCH
+
 
 
 #define DEBUG
@@ -21,7 +22,7 @@
 
 
 
-#define DEBUG_BOTZONE
+//#define DEBUG_BOTZONE
 //#define TIME_CONTROL
 using namespace std;
 
@@ -37,11 +38,6 @@ extern int keepLen ;
 extern int range ;
 extern int MAX_VCT_DEPTH;
 extern int MAX_VCF_DEPTH;
-extern int LC_DELTA;//坏点与最大估值的差值
-extern int LC_LOW;//坏点最低值
-extern int LC_KEEP;//LC保留节点数
-extern int TT_KEEP;//置换表保留节点数
-extern int keepLenMin;//最小保留分支数
 
 //开局设置
 extern int step_INIT ;

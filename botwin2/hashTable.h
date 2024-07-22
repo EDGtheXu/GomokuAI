@@ -267,7 +267,6 @@ public:
 
 //局面置换表
 extern U64 zobristInitRandom;
-
 class TTEntrace
 {
 public:
@@ -282,7 +281,7 @@ public:
     Pos moves[150];//所有可移动的点
     int moveCount;
     int value;//动态估值
-    int depth;//更新深度
+
     
 
 private:

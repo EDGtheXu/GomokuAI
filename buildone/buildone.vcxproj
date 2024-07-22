@@ -141,7 +141,6 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <PreprocessToFile>false</PreprocessToFile>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -184,7 +183,6 @@
       <MinimalRebuild>true</MinimalRebuild>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <PreprocessToFile>false</PreprocessToFile>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -212,7 +210,6 @@
       <Optimization>Disabled</Optimization>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <PreprocessToFile>false</PreprocessToFile>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='BugTest|Win32'">
@@ -227,7 +224,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='BugTest|x64'">
     <ClCompile>
       <PreprocessToFile>false</PreprocessToFile>
-      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

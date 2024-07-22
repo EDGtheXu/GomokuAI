@@ -145,7 +145,6 @@ board* board::reverse()
 
 int board::abSearch(int depth, int alpha, int beta, int maxdept)
 {
-
 #ifdef DEBUG_ABS
 	
 #endif // DEBUG_ABS
@@ -260,6 +259,7 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 		int staticValue = getScore();//静态估值
 		int c = genAreaAll(tte->moves);
 #ifdef FULLSEARCH
+
 		tte->moveCount = c;
 #else
 		tte->moveCount = LC(tte->moves, c);//启发策略
@@ -267,57 +267,27 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 		tte->value = staticValue;
 		TT.AddItem(zobristKey, tte);
 	}
-	
-	if (tte->depth == maxdept) return tte->value;//重复局面提前返回
-
-	if (tte->value > 10000 || tte->value < -10000) {//必赢必输提前返回(应该加点判断)
+	if (tte->value > 10000 || tte->value < -10000) {//必赢必输提前返回
 		//cout << *this << endl;
 		return tte->value;
 	}
-
-
 
 	//setp 4: 循环全部着法
 	Pos* poss = tte->moves;
 	int count = tte->moveCount;
 	int rc = 0;
-	int branch = 0;
-	int maxBranch = getMaxBranch(depth);//每层最大分支数（递减）
 
-	int maxValue = MIN_INT;
+	int max = MIN_INT;
 	int values[150]{ 0 };
 	while (count--) {
-		Pos& cur = poss[rc];
+
 		//step 5: 启发式剪枝
-		
-		int vv[2][8]{ 0 };
-		getShapes4(cur, vv);
-		if (!checkImportantShapes4(cur) && depth<maxdept-1) {//该点无重要棋型
-			int distance1 = distance(cur, *lastMove());
-			int distance2 = distance(cur, *lastMove(2));
-			bool isNear1 = distance1 <= 2 || isInLine(cur, *lastMove()) && distance1 <= 4;
-			bool isNear2 = distance2 <= 2 || isInLine(cur, *lastMove(2)) && distance2 <= 4;
 
-			if (maxValue > -10000) {// 超过最大分支数时
-				if (branch > maxBranch) continue;
-			}
-			else {//失败局面检查更多分支
-				if (branch > MAX(maxBranch, 50)) {
-					bool isNear3 = distance(cur, *lastMove(3)) <= 4;
-					if (!(isNear1 && isNear3)) 
-						continue;
-				}
-			}
-
-		}	 
-
-		
-		branch++;
-		
+		Pos& cur = poss[rc];
+		move(poss[rc]);
 
 		//step 6: ab
-		move(poss[rc]);
-		//cout << *this << endl;
+		
 		int t = -abSearch( depth + 1,  -beta,-alpha, maxdept);
 		values[rc] = t;
 		undo();
@@ -325,20 +295,15 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 
 		//step 7: 时间控制
 #ifdef TIME_CONTROL
-		static int cmt = 7000;
-		if (cmt-- < 0) {
-			if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) terminal = true;
-			cmt = 7000;
-		}
 		if (terminal) break;
 #endif
 
 		//step 8: ab剪枝
-		maxValue = t > maxValue ? t : maxValue; 
-		alpha = maxValue > alpha ? maxValue : alpha;
+		max = t > max ? t : max; 
+		alpha = max > alpha ? max : alpha;
 
-		if (maxValue >= beta) {
-			
+		if (max >= beta) {
+			//cout << *this << endl;
 			break;
 		}
 
@@ -346,22 +311,23 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 
 
 	}
-	if (terminal) return maxValue;
+	if (terminal) return max;
 
 
 
 	//step 9: 更新置换表
-	tte->value = maxValue;
-	tte->depth = maxdept;
+	tte->value = max;
 	if (tte->value > -10000 && tte->value < 10000) {
-		tte->moveCount = TTrefresh(tte->moves, tte->moveCount, values);//重新排序
+		tte->moveCount = TTrefresh(tte->moves, tte->moveCount, values);
 	}
-	
+	if (max<1000 && max>-1000) {
+		
+	}
 
 
 
 
-	return maxValue;
+	return max;
 }
 
 
@@ -369,33 +335,44 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 // 决策
 pair<int, int> board::policy()
 {
-	cout << *this << endl;
+	
 	//生成根节点着法
 	pair<int, int> poss[150];
 	int values[150]{ 0 };
-	int count = genRoot(poss,values);
+	int count=genAreaAll(poss);
+	
+	count = LC(poss, count);
+	
 	int curmax = MIN_INT;
-	Pos best = poss[0];
-	Pos last = best;
+	pair<int, int> best = poss[0];
 	int maxv = -MIN_INT * 2;
 
 
 	int rc = 0;
 	int depth = 2;
-
 	//迭代加深
-	for (depth = START_DEPTH; depth <=MAX_DEPTH && !terminal; depth+=2)
+	for (depth = START_DEPTH; depth <=MAX_DEPTH; depth++)
 	{
 		int _count = count;
 		rc = 0;
 		curmax = MIN_INT;
 		reachMaxDepth = 0;
-
 #ifdef DEBUG_POLICY
 			int steptime = clock();
 #endif // DEBUG_POLICY
 		while (_count--) {
-
+			/*
+			if (values[rc] < -10000) {//必输点
+				rc++;
+				//cout << *this << endl;
+				continue;
+			}
+			else if (values[rc] > 10000) {//必胜点
+				rc++;
+				//cout << *this << endl;
+				continue;
+			}
+			*/
 			move(poss[rc]);
 
 			//cout << *this << endl;
@@ -406,7 +383,6 @@ pair<int, int> board::policy()
 
 #ifdef TIME_CONTROL
 			if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) terminal = true;
-			if (terminal)break;
 #endif
 
 			if (t > curmax)
@@ -418,45 +394,44 @@ pair<int, int> board::policy()
 			rc++;
 
 		}
-
-#ifdef TIME_CONTROL
-		if (terminal) break;
-#endif
-		last = best;
-		lastValue = curmax;
 #ifdef DEBUG_POLICY
-		cout << "depth = " << depth <<"-" <<reachMaxDepth<< ", eval = " << curmax << ", best = (" << last.first << ", " << last.second << ")" << ", time = " << clock() - steptime << endl;
+		cout << "depth = " << depth <<"-" <<reachMaxDepth<< ", eval = " << curmax << ", best = (" << best.first << ", " << best.second << ")" << ", time = " << clock() - steptime << endl;
 #endif // DEBUG_POLICY
-		TTrefresh(poss, count, values);
 
 	}
 
 	
 #ifdef DEBUG_POLICY
-	cout << endl << "TOTAL:" << "max depth = " << min(depth,MAX_DEPTH) << ", eval = " << curmax << ", best = (" << last.first << ", " << last.second << ")" << endl;
+	cout << endl << "TOTAL:" << "max depth = " << min(depth,MAX_DEPTH) << ", eval = " << curmax << ", best = (" << best.first << ", " << best.second << ")" << endl;
 	cout << "rc = " << rc << endl;
 #endif // DEBUG_POLICY
+
+	//cout<<"time1:"<<time1<<endl;
 
 	return best;
 }
 
 
 void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
-
 #ifdef DEBUG
-	int t = clock();
-	shape4count += 1;
+	
+	shape4count+=1;
 #endif // DEBUG
+
+	uint32_t indexs = getStrIndexs(pos);
 
 	char* nstrs[4]{};
 	uint32_t hashstr[4]{ 0 };
 	
-	for (int i = 0;i < 4;i++) {
-		int* ins = strIndexs[pos.first][pos.second][i];
-		nstrs[i] = strs[i][ins[0]];
-		hashstr[i] = strsHash[i][ins[0]];
-	}
-
+	nstrs[3] = strs[3][indexs & 255];
+	indexs >>= 8;
+	nstrs[2] = strs[2][indexs & 255];
+	indexs >>= 8;
+	uint8_t x2 = indexs & 255;
+	nstrs[1] = strs[1][x2];
+	indexs >>= 8;
+	uint8_t x1 = indexs & 255;
+	nstrs[0] = strs[0][x1];
 
 #ifdef DEBUG
 	int tt = clock();
@@ -464,104 +439,21 @@ void board::getShapes4(pair<int, int> pos, int vv[2][SHAPE_TYPES]) {
 
 //读取树
 	for (int i = 0;i < 4;i++) {
-		int* ins = strIndexs[pos.first][pos.second][i];
-		int indexStr = ins[0];
-		int index = ins[1];
-		int s = index > 5 ? index - 5 : 0;
-		int e = endIndex[i][indexStr]-index>5?index+5: endIndex[i][indexStr];
-		int len = e - s;
-		int l = (endIndex[i][indexStr] - e)*2;
-		int r = (2 * s + l);
-
-		uint32_t mask = 0;
-		for (int j = index-1;j >= s;j--) {
-			if (nstrs[i][j] == '/')break;
-mask <<= 2;
-			mask &= 3;
-			
-		}
-		for (int j = index + 1;j <= e;j++) {
-			if (nstrs[i][j] == '/')break;
-mask <<= 2;
-			mask &= 3;
-			
-		}
-
-		hashstr[i] <<= l;
-		hashstr[i] >>= r;
-
-
-
-		int** vvv = shapeHashTable.getShape(nstrs[i]+s,hashstr[i],len+1);
-
-		for (int j = 0;j < SHAPE_TYPES;j++) {
-			vv[0][j] += vvv[0][j];
-			vv[1][j] += vvv[1][j];
+		if (!strs[i])continue;
+		int t = clock();
+		int** vvv = shapeHashTable.getShape(nstrs[i]);
+timeshape4 += clock() - t;
+		for (int i = 0;i < SHAPE_TYPES;i++) {
+			vv[0][i] += vvv[0][i];
+			vv[1][i] += vvv[1][i];
 		}
 	}
 
 
 #ifdef DEBUG
-	timeshape4 += clock() - t;
+	
 	timereadtree += clock() - tt;
 #endif // DEBUG
-}
-
-bool board::checkImportantShapes4(pair<int, int> pos) {
-
-#ifdef DEBUG
-	int t = clock();
-	shape4count += 1;
-#endif // DEBUG
-
-	char* nstrs[4]{};
-	uint32_t hashstr[4]{ 0 };
-
-	for (int i = 0;i < 4;i++) {
-		int* ins = strIndexs[pos.first][pos.second][i];
-		nstrs[i] = strs[i][ins[0]];
-		hashstr[i] = strsHash[i][ins[0]];
-	}
-
-
-#ifdef DEBUG
-	int tt = clock();
-#endif // DEBUG
-
-	//读取树
-	for (int i = 0;i < 4;i++) {
-		int* ins = strIndexs[pos.first][pos.second][i];
-		int indexStr = ins[0];
-		int index = ins[1];
-		int s = index > 5 ? index - 5 : 0;
-		int e = endIndex[i][indexStr] - index > 5 ? index + 5 : endIndex[i][indexStr];
-		int len = e - s;
-		int l = (endIndex[i][indexStr] - e) * 2;
-		int r = (2 * s + l);
-		hashstr[i] <<= l;
-		hashstr[i] >>= r;
-
-
-
-		int** vvv = shapeHashTable.getShape(nstrs[i] + s, hashstr[i], len+1);
-
-		for (int j = 0;j < SHAPE_TYPES - 1 ;j++) {
-			if (vvv[0][j] || vvv[1][j]) {
-#ifdef DEBUG
-				timeshape4 += clock() - t;
-				timereadtree += clock() - tt;
-#endif // DEBUG
-				return  true;
-			}
-		}
-	}
-
-
-#ifdef DEBUG
-	timeshape4 += clock() - t;
-	timereadtree += clock() - tt;
-#endif // DEBUG
-	return false;
 }
 
 int board::getScoreP(pair<int, int>& pos) {
