@@ -28,7 +28,7 @@ public:
 	strTree* r;
 
 	strTree(int v, char ch);
-	int get(const char* str);
+	int get(const char* str, int v[SHAPE_TYPES]);
 	//int getArea()
 
 
@@ -42,6 +42,7 @@ public:
 	static void initRoots();
 	static int getScoreG(int vv[2][SHAPE_TYPES]);
 	static int getScoreG(int *v,int*_v);
+	static int getScoreSide(int* v);
 
 	~strTree();
 };

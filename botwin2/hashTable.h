@@ -10,7 +10,7 @@
 
 using namespace std;
 
-template <typename K,typename V>
+template <typename K, typename V>
 class basehashTable
 {
 protected:
@@ -20,7 +20,7 @@ protected:
         V value;
         item* next;
 
-        item(K k, V v) : key(k), value(v), next(nullptr){}
+        item(K k, V v) : key(k), value(v), next(nullptr) {}
     };
     const int tableSize;  // 存储量可改变
     item** HashTable;
@@ -29,14 +29,14 @@ protected:
 
 
 public:
-    int hitCount=0;
-    int unHitCount=0;
-//哈希公用方法
+    int hitCount = 0;
+    int unHitCount = 0;
+    //哈希公用方法
     inline basehashTable(int s) :tableSize(s) {
 
         HashTable = new item * [tableSize];
         for (int i = 0; i < tableSize; ++i)
-            HashTable[i] = new item(keyNull(),valueNull());
+            HashTable[i] = new item(keyNull(), valueNull());
         state = -1;
         size = 0;
 
@@ -76,7 +76,7 @@ public:
         item* p2;
 
         // case0: bucket is empty
-        if (keyEmpty( HashTable[index]->key) )
+        if (keyEmpty(HashTable[index]->key))
         {
             return;
         }
@@ -151,7 +151,7 @@ public:
         while (p != nullptr)
         {
             state++;
-            if (!keyEmpty( p->key) && !keyCmp(p->key, str))
+            if (!keyEmpty(p->key) && !keyCmp(p->key, str))
             {
                 FindName = true;
                 v = p->value;
@@ -166,7 +166,7 @@ public:
         else {
             hitCount++;
         }
-            
+
 
         return v;
     }
@@ -180,10 +180,10 @@ protected:
     int state;//状态值，-1为找空，>=为链表的索引值
 
 
-    virtual int keyCmp(K k1, K k2){return k1 != k2;}
+    virtual int keyCmp(K k1, K k2) { return k1 != k2; }
     virtual int valueEqual(V v1, V v2) { return v1 == v2; }
     virtual V valueNull() { return nullptr; }
-    virtual K keyNull() {  return K{}; }
+    virtual K keyNull() { return K{}; }
 
 
 };
@@ -191,7 +191,7 @@ protected:
 
 
 class DoubleShape {
-public :
+public:
     int* v;
     int* _v;
 
@@ -203,86 +203,66 @@ public :
 
 
 
-class hashTable:public basehashTable<char*,int>
+class hashTable :public basehashTable<char*, int**>
 {
-//重写方法
+    //重写方法
 public:
-    
-    inline hashTable() :basehashTable<char*, int>(100000) {};
+
+    inline hashTable() :basehashTable<char*, int**>(100000) {};
     inline ~hashTable() {};
-    int hashFunction(uint32_t code);
-    int hashFunction(char*);
-    int find(char* str, uint32_t code)
-    {
-        uint32_t index = hashFunction(code);
-        bool FindName = false;
-
-        int v = -1;
-        item* p = HashTable[index];
-
-        state = -1;
-        while (p != nullptr)
-        {
-            state++;
-            if (p->key)
-            {
-                FindName = true;
-                v = p->value;
-                break;
-            }
-            p = p->next;
-        }
-        if (!FindName) {
-            state = -1;
-            unHitCount++;
-        }
-        else {
-            hitCount++;
-        }
+    int hashFunction(char* str);
+    int hashFunction(char* str, int len);
 
 
-        return v;
-    }
-
-    
 protected:
 
-    inline bool keyEmpty(char* k) { return k==nullptr; }
+    inline bool keyEmpty(char* k) { return k == nullptr; }
     inline char* keyNull() { return nullptr; }
-    int keyCmp(char* k1, char* k2) { return strcmp( k1 , k2); }
+    int keyCmp(char* k1, char* k2) { return strcmp(k1, k2); }
 
 
-//独有方法
+    //独有方法
 public:
     void PrintTable();
     void PrintItemsInIndex(int index);
     void init();
-    int getShape(char* str,int code);
+    int** getShape(char* str);
     void generateStrings(string current, int len, int maxLength, int samecount);
-
 };
 
 
+enum ValueType {
+    value_type_unvalid,
+    value_type_static,
+    value_type_VCF, 
+    value_type_ab, 
 
+    value_type_score
+};
 
 //局面置换表
 extern U64 zobristInitRandom;
+
 class TTEntrace
 {
 public:
-    TTEntrace(Pos*ps,int c,int v):value(v) {
+    TTEntrace(Pos* ps, int c, int v) :value(v),moveCount(c) {
         for (int i = 0;i < moveCount;i++) {
             moves[i] = ps[i];
         }
     };
-    TTEntrace():moveCount(0),value(0){}
+    TTEntrace() :moveCount(0), value(0) {}
     ~TTEntrace();
 
-    Pos moves[150];//所有可移动的点
+    Pos moves[200];//所有可移动的点
+    int values[200]{ 0 };//保存上次的估值
+
     int moveCount;
     int value;//动态估值
-
-    
+    int depth;//更新深度
+    int valueType = value_type_unvalid;
+    int step;
+    playerEnum turn;
 
 private:
 
@@ -294,7 +274,7 @@ class TransitionTable :public basehashTable<U64, TTEntrace*> {
     //重写方法
 public:
 
-    inline TransitionTable():basehashTable<U64, TTEntrace*>(1000000) {};
+    inline TransitionTable() :basehashTable<U64, TTEntrace*>(1000000) {};
     inline ~TransitionTable() {};
 
 protected:

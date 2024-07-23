@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="board.cpp" />
+    <ClCompile Include="database.cpp" />
     <ClCompile Include="hashTable.cpp" />
     <ClCompile Include="rule.cpp" />
     <ClCompile Include="config.cpp" />
@@ -152,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="board.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="database.h" />
     <ClInclude Include="evaluate.h" />
     <ClInclude Include="hashTable.h" />
     <ClInclude Include="rule.h" />

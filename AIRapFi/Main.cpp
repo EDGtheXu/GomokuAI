@@ -206,6 +206,7 @@ void pipeLoop() {
 }
 
 int main(int argc, char* argv[]) {
+	/*
 	bool customConfigPath = false;
 	if (argc > 1) {
 		char path[MAX_PATH];
@@ -281,5 +282,28 @@ int main(int argc, char* argv[]) {
 	pipeLoop();
 
 #endif
+
+	*/
+	
+	Board b(15);
+	AI a(&b);
+	int t = clock();
+	for (int i = 0;i < 85000;i++) {
+		a.makeMove(POS(7,6));
+		a.undoMove();
+	}
+	
+	cout << clock() - t << endl;
+
+	//a.makeMove(a.turnMove());
+
+	a.trace(cout);
+
+
+
+
+	system("pause");
+
+	
 	return 0;
 }

@@ -36,6 +36,9 @@
     <ClCompile Include="hashTable.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="database.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="board.h">
@@ -54,6 +57,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="hashTable.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="database.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

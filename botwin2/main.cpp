@@ -107,8 +107,8 @@ int main()
 
 	
 	
-	btzrule();
-
+	//btzrule();
+	game();
 
 	//shapeHashTable;
 	//int t = clock();
