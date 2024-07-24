@@ -288,40 +288,43 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 	//step 1: 提前胜负判断
 	int winFlag = quickWinCheck();
 	if (winFlag)
+	{
 		return MAX_INT * winFlag;
+	}
 
 	bool debugLay = (	
 		depth == 3&&
-		chess[9][6]==1&&
-		chess[7][5] == -1
-		
+		chess[13][7]==1&&
+		chess[9][10] == -1&&
+		chess[5][6]==1
 		// lastMove()->first == 7 && lastMove()->second == 11
 		//&& lastMove(2)->first == 9 && lastMove(2)->second == 9
 		//&& lastMove(3)->first == 1 && lastMove(3)->second == 10
 	);
 	if (debugLay) {
 		//cout << *this << endl;
+
 		int aa = 1;
 	}
 	
 
-
-	//step 2： VCF
-	if (depth == maxdept) {
-
-		//cout << *this << endl;
-		int turnIndex = piece();
-		VCFdepth = 0;
-		int posScore = (ABS(7 - lastMove()->first) + ABS(7 - lastMove()->second));
 		int score = getScoreOneStep()		//当前步得分
 			//+turnValeDelta				//修正奇数层差值
 			//- posScore * posScoreMulti	//位置得分
 			;
 		score = score * curentMulti - staticValues[depth - 1];
+	//step 2： VCF
+	if (depth ==maxdept == 4||depth ==maxdept == 5) {
+
+		//cout << *this << endl;
+		int turnIndex = piece();
+		VCFdepth = 0;
+		int posScore = (ABS(7 - lastMove()->first) + ABS(7 - lastMove()->second));
 
 
 
-		/*
+
+		
 		if (turnToMove == policy_turn) {//下一步是我方
 			if (oppoShape()[C4]  == 0 && myShape()[H3]+myShape()[C3]+myShape()[Q3]>0) {
 				vcfAttacker = turnToMove;
@@ -364,13 +367,16 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 			}
 
 		}
-		*/
+		
 
 		//vcf未杀，取局面估值
 
 //cout << *this << endl;
 		return score;
 
+	}
+	else if (depth == maxdept) {
+		return score;
 	}
 
 
@@ -454,7 +460,7 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 		//step 6: ab
 		move(poss[rc]);
 		//
-		if (depth == 1) {
+		if (depth == 4) {
 			//cout << *this << endl;
 			int aa = 1;
 		}
@@ -546,8 +552,8 @@ pair<int, int> board::policy()
 					}
 	
 				}
-				if (temp && eval == 255 && temp->dbWiner != turnToMove) {//失败方选最大值
-					if ((-eval) < temp->dbEval) {//胜利方选最短值
+				if (temp && eval == 255 && temp->dbWiner != turnToMove) {
+					if ((-eval) < temp->dbEval) {//失败方选最大值
 						eval = -temp->dbEval;
 						bestDbMove = tte->moves[i];
 					}
@@ -597,9 +603,6 @@ pair<int, int> board::policy()
 
 
 
-
-
-	//置换表
 
 	//迭代加深
 	for (depth = START_DEPTH; depth <= MAX_DEPTH && !terminal; depth +=1)

@@ -197,8 +197,9 @@ void game() {
 				pauseTime = true;
 			}
 			mb.move(p);
-
-			/*
+			cout << mb << endl;
+			cout << STD_OUT_X(p.first) << ", " << STD_OUT_Y(p.second) << endl;
+			
 #ifdef DEBUG_main
 			cout << "timemove=" << timemove << endl;
 			cout << "movecount=" << movecount << endl;
@@ -223,10 +224,11 @@ void game() {
 			shape4count = 0;
 			timetemp = 0;
 			lcCount = 0;
-			*/
+			
 		}
 		else if (r == 'U') {
 			mb.undo();
+			cout << mb << endl;
 		}
 		else if (r == 'Z') {
 			string s=mb.stdHistoryMove();
@@ -308,10 +310,9 @@ void game() {
 			
 
 			mb.move(r-'A',15-h);
+			cout << mb << endl;
 		}
-
-
-		cout << mb << endl;
+		
 
 		mb.checkBoard();
 	}

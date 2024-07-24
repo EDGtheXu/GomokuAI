@@ -7,7 +7,8 @@ const int VALUE_GDEFAULT[SHAPE_TYPES]{	//	权重
 			1000		,					//	WIN
 			250		,	60	,			//	H4		C4
 			60		,	60	,	20	,   //	H3		Q3		C3
-			20		,	10				//	H2		M2
+			20		,	10	,			//	H2		M2
+			0							//	同一行双4禁手
 };
 
 //	NULL -> H2:	10
@@ -39,7 +40,7 @@ const int VALUE_GDEFAULT[SHAPE_TYPES]{	//	权重
 // 
 //总体设置
 int START_DEPTH =1;
-int MAX_DEPTH = 4;
+int MAX_DEPTH = 19;
 
 int range = 2;
 
@@ -84,7 +85,7 @@ const int COL = 15;
 const int ROW = 15;
 const int MAX_INT = 0x3f3f3f3f;
 const int MIN_INT = -MAX_INT;
-const int MAX_SEARCH_TIME_MS = 3 * CLOCKS_PER_SEC;
+const int MAX_SEARCH_TIME_MS = 10 * CLOCKS_PER_SEC;
 
 
 
@@ -119,6 +120,7 @@ const vector<string> gshaps_qian3 = { "011010","010110" };
 const vector<string> gshaps_chong3 = { "11100","11010","11001","10110","10101","10011",   "00111","01011","01101","01110" };
 const vector<string> gshaps_huo2 = { "001100","010100","001010","010010" };
 const vector<string> gshaps_ming2 = { "11000","10100","10010",  "00011","00101","01001" ,"01010","01100" ,"00110" };
+const vector<string> gshaps_forbiden = { "1011101" };
 
 //公用棋型
 const vector<string> gshaps_win_oppo = { "/////" };

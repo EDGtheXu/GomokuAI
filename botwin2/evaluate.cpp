@@ -111,6 +111,7 @@ int strTree::get(const char* str, int v[7]) {
 	v[C3] += tempv[C4] || tempv[H3] || tempv[Q3] ? 0 : tempv[C3];
 	v[H2] += tempv[Q3] ? 0 : tempv[H2];
 	v[M2] += (tempv[C4] | tempv[C3] | tempv[Q3] | tempv[H3] | tempv[H2]) ? 0 : tempv[M2];
+	v[BAN] += tempv[BAN];
 
 	return count;
 }
@@ -129,7 +130,7 @@ int strTree::getScoreG(int vv[2][SHAPE_TYPES]) {
 		vv[0][4] * values[4] +
 		vv[0][5] * values[5] +
 		vv[0][6] * values[6] +
-		vv[0][7] * values[7]
+		vv[0][7] * values[7] 
 		;
 	//对方权值
 	int _score =

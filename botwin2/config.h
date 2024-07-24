@@ -24,14 +24,14 @@
 
 
 #define DEBUG_BOTZONE
-//#define TIME_CONTROL
+#define TIME_CONTROL
 
 
 #define SWAP3				//三手交换
 #define FORBID_BLACK_33		//33禁手
 #define FORBID_BLACK_44		//44禁手
 #define FORBID_BLACK_LONG	//长连禁手
-#define STEP5_OUT_N 3		//五手N打
+#define STEP5_OUT_N 2		//五手N打
 #define STEP5_OUT_COUNT 5
 
 #define STD_OUT_FORM		//比赛输出格式
@@ -44,7 +44,7 @@ using namespace std;
 
 typedef pair<int, int> Pos;
 typedef uint64_t U64;
-#define SHAPE_TYPES 8
+#define SHAPE_TYPES 9
 
 
 //总体设置
@@ -146,7 +146,7 @@ enum playerEnum
 playerEnum operator-(playerEnum p);
 
 enum shapeEnum {
-	WIN = 0, H4, C4, H3, Q3, C3, H2, M2
+	WIN = 0, H4, C4, H3, Q3, C3, H2, M2, BAN
 };
 
 

@@ -354,6 +354,9 @@ public:
 		return validIndex;
 	}
 
+
+
+	/*
 	int quickWinCheck() {//返回 1 win    0 未知     -1 输
 
 		if (oppoShape()[WIN])//对方已经连5
@@ -365,11 +368,7 @@ public:
 		else if (oppoShape()[H4]) {//对方有 活4 ，对方胜
 			//cout << *this << endl;
 			return -1;
-		}/*
-		else if (shapesChange[oppoIndex][C4]&&shapesChange[oppoIndex][H3]) {//对方 活3 冲4，对方胜//堵冲四同时自己形成活三自己胜
-			//cout << *this << endl;
-			return -1;
-		}*/
+		}
 		else if ((myShape()[H3] || myShape()[Q3]) && !oppoShape()[C4]) {//我方 有3 且 对方 无冲4， 我方胜
 
 			//cout << *this << endl;
@@ -379,6 +378,77 @@ public:
 			//cout << *this << endl;
 			return -1;
 		}
+		return 0;
+	}
+	*/
+
+
+
+	int quickWinCheck() {//返回 1 win    0 未知     -1 输
+
+		if (turnToMove != ME) {//判断白棋是否必赢、输，上步黑是否是禁手
+			if (oppoShape()[WIN]) {//对方已经连5
+				if (oppoShape()[WIN] > 1) return 1;//是长连
+				return -1;
+			}
+			else if (myShape()[WIN] == 1) {//白方胜 
+				return 1;
+			}
+			else if (myShape()[H4] || myShape()[C4] || myShape()[WIN]) {//白方有 活4 冲4 ，可以直接 连5 ， 白方胜
+				//cout << *this << endl;
+				return 1;
+			}
+			else if (oppoShape()[H4]) {//黑方有 活4 ，不确定
+				//cout << *this << endl;
+				return -1;
+			}
+			/*
+			else if (shapesChange[oppoIndex][C4]&&shapesChange[oppoIndex][H3]) {//对方 活3 冲4，对方胜//堵冲四同时自己形成活三自己胜
+				//cout << *this << endl;
+				return -1;
+			}*/
+			else if ((myShape()[H3] || myShape()[Q3]) && !oppoShape()[C4]) {//白方 有3 且 对方 无冲4， 我方胜
+
+				//cout << *this << endl;
+				return 1;
+			}
+			else if ((shapesChange[oppoIndex][H3] + shapesChange[oppoIndex][Q3] > 1) || (shapesChange[oppoIndex][C4]+ shapesChange[oppoIndex][H4] > 1)) {//黑方上步是禁手
+				//cout << *this << endl;
+				return 1;
+			}
+
+		}
+		else {
+			if (shapesChange[0][H3] + shapesChange[0][Q3] > 1 || 
+				shapesChange[0][H4] + shapesChange[0][C4] > 1 || 
+				shapesChange[0][WIN] > 1	||
+				shapesChange[0][BAN]	//1011101单独处理
+				) return -1;//禁手规则
+			if (oppoShape()[WIN])//对方已经连5
+				return -1;
+			else if (shapes[0][H4]|| shapes[0][C4] ||shapes[0][WIN]) {//黑方有 活4 冲4 ，可以直接 连5 
+				//cout << *this << endl;
+				return 1;
+			}
+			else if (oppoShape()[H4]) {//白方有 活4 ，对方胜
+				//cout << *this << endl;
+				return -1;
+			}/*
+			else if (shapesChange[oppoIndex][C4]&&shapesChange[oppoIndex][H3]) {//对方 活3 冲4，对方胜//堵冲四同时自己形成活三自己胜
+				//cout << *this << endl;
+				return -1;
+			}*/
+			else if ((myShape()[H3] || myShape()[Q3]) && !oppoShape()[C4]) {//我方 有3 且 对方 无冲4， 我方胜，黑棋可能长连
+
+				//cout << *this << endl;
+				return 1;
+			}
+			else if (!myShape()[H3] && !myShape()[Q3] && !myShape()[C3] && shapesChange[oppoIndex][H3] + shapesChange[oppoIndex][Q3] > 1) {//我方 无3 且 白方 双3， 白方胜
+				//cout << *this << endl;
+				return -1;
+			}
+		}
+
 		return 0;
 	}
 	int quickWinScore() {
@@ -683,11 +753,11 @@ public:
 	//GAME检验
 	bool checkBoard() {
 
-		if (shapesChange[0][H3] + shapesChange[0][Q3] + shapesChange[0][C3] > 1) {
+		if (shapesChange[0][H3] + shapesChange[0][Q3]  > 1) {
 			cout << "black forbiden: 33" << endl;
 			return false;
 		}
-		else if (shapesChange[0][H4]+ shapesChange[0][C4] > 1) {
+		else if (shapesChange[0][H4]+ shapesChange[0][C4] >1|| shapesChange[0][BAN]) {
 			cout << "black forbiden: 44" << endl;
 			return false;
 		}
@@ -715,17 +785,21 @@ public:
 	//输出历史表
 	string stdHistoryMove() {
 		string out = "{[C5][][][先/后手胜][time][2024 CCGC];";
+		string yxstr = "";
 		for (int i = 0;i < moveCount;i++) {
 			string ap;
 			if (i % 2 == 0) ap = "B(";
-			else ap = "w(";
+			else ap = "W(";
 
 			char x[3] = { STD_OUT_X(historyMoves[i].first),0 ,0};
 			ap.append(x);
 			ap.append(",");
+			x[0] += 32;
+			yxstr.append(x);
 			char* chi = x;
 			chi = itoa(STD_OUT_Y(historyMoves[i].second),x,10);
 			ap.append(chi);
+			yxstr.append(chi);
 			ap.append(")");
 			out.append(ap);
 			if (i == moveCount - 1)
@@ -735,7 +809,9 @@ public:
 			
 		}
 		out.append("}");
-		cout << out << endl;
+		cout << out << endl<<endl;
+		cout << yxstr << endl;
+
 		return out;
 	}
 	//数据库走法
