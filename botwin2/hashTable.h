@@ -237,7 +237,8 @@ enum ValueType {
     value_type_VCF, 
     value_type_ab, 
 
-    value_type_score
+    value_type_score,
+    value_type_db
 };
 
 //局面置换表
@@ -257,11 +258,13 @@ public:
     Pos moves[200];//所有可移动的点
     int values[200]{ 0 };//保存上次的估值
 
-    int moveCount;
+    int moveCount=0;
     int value;//动态估值
     int depth;//更新深度
     int valueType = value_type_unvalid;
     int step;
+    int dbEval = 0;
+    playerEnum dbWiner;
     playerEnum turn;
 
 private:

@@ -1,12 +1,11 @@
 #include <memory.h>
 
 #include "config.h"
-#include "rule.h"
+#include "database.h"
 #include "evaluate.h"
 #include "hashTable.h"
 #include "board.h"
-
-
+#include "rule.h"
 
 
 
@@ -14,6 +13,33 @@
 
 int main()
 {
+
+
+
+
+
+
+
+
+	/*
+	strTree::initRoots();
+	database db;
+
+	db.init();
+
+	board b;
+	b.move(7, 7);
+	b.move(7, 8);
+	//b.move(7, 9);
+
+	Pos res = db.readLine(b.historyMoves, b.moveCount);
+	cout << res.first << ' ' << res.second << endl;
+
+
+	return 0;
+
+	*/
+
 	/*
 	strTree::initRoots();
 	board b;

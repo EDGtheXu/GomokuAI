@@ -31,11 +31,14 @@
 #define FORBID_BLACK_33		//33禁手
 #define FORBID_BLACK_44		//44禁手
 #define FORBID_BLACK_LONG	//长连禁手
-#define STEP5_OUT_N 2		//五手N打
+#define STEP5_OUT_N 3		//五手N打
+#define STEP5_OUT_COUNT 5
 
 #define STD_OUT_FORM		//比赛输出格式
 #define STD_OUT_X(x) ((char)(x+'A'))
 #define STD_OUT_Y(y) (15-y)
+
+//#define TIMER_CLOCK
 
 using namespace std;
 

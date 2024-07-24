@@ -45,6 +45,7 @@ int strTree::get(const char* str, int v[7]) {
 
 	if (en < 5)//¶Ì×Ö·û´®ÉáÆú
 		return 0;
+	int fiveCount = 0;
 	//»ñÈ¡ÆåÐÍ
 	for (int i = 0; str[i] && back <= en - 4; i++) {
 		if (str[i] == '/') {
@@ -96,14 +97,15 @@ int strTree::get(const char* str, int v[7]) {
 
 		if (root->valueIndex != -1) {
 			va = root->valueIndex;
+			if (va == 0) fiveCount += 1;
 			tempv[va] = 1;
 			count++;
 		}
 	}
 
-	v[WIN] += tempv[WIN];
+	v[WIN] += fiveCount;
 	v[H4] += tempv[H4];
-	v[C4] += tempv[C4];
+	v[C4] += tempv[H4]?0:tempv[C4];
 	v[H3] += tempv[C4] ? 0 : tempv[H3];
 	v[Q3] += tempv[C4] ? 0 : tempv[Q3];
 	v[C3] += tempv[C4] || tempv[H3] || tempv[Q3] ? 0 : tempv[C3];

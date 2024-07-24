@@ -1,10 +1,12 @@
 #pragma GCC optimize(2)
-
+#include <future>
 #include "rule.h"
-
-
 #include "board.h"
-#include "config.h"
+
+
+#ifdef TIMER_CLOCK
+#include <easyx.h>
+#endif // TIMER_CLOCK
 
 
 
@@ -104,7 +106,59 @@ void btzrule() {
 }
 
 
+bool pauseTime = true;
+#ifdef TIMER_CLOCK
+void timerThread() {
+	initgraph(250, 100);
+	settextstyle(60, 30,"宋体");
+	settextcolor(RGB(255, 255, 0));
+	cout << "init timer" << endl;
+	int mm = 15;
+	int begin = clock();
+	int tempClock = begin;
+	int lastss = 0;
+	
+	while (1) {
+
+		if (pauseTime) {
+			tempClock = clock();
+			while (pauseTime) {
+
+				Sleep(100);
+			}
+			begin += (clock() - tempClock);
+		}
+		int nowms = clock() - begin;
+		int ss = (nowms / CLOCKS_PER_SEC);
+		if (ss <= lastss) {
+			Sleep(100);
+			continue;
+		}
+		lastss = ss;
+		int mm = ss / 60;
+		ss %= 60;
+		char str[20]{ 0 };
+		if (mm < 10) str[0] = '0';
+		char tempstr[3]{ 0 };
+		strcat(str, itoa(mm, tempstr, 10));
+		strcat(str, " : ");
+		if (ss < 10) strcat(str, "0");
+		strcat(str, itoa(ss, tempstr, 10));
+
+		outtextxy(20, 20, str);
+
+		//cout << str << endl;
+	}
+
+
+}
+#endif
+
+
 void game() {
+
+
+
 
 	//初始化字典树
 	strTree::initRoots();
@@ -116,6 +170,10 @@ void game() {
 
 	board mb;
 
+#ifdef TIMER_CLOCK
+	future<void> ttt = async(timerThread);
+#endif
+
 	
 	char r = '0';
 	int h = 0;
@@ -123,21 +181,25 @@ void game() {
 	{
 
 		cin >> r;
-		if (r > 'a') r -= 32;
+		if (r >= 'a') r -= 32;
 
 		if (r == 'T') {
+			if (!mb.checkBoard()) {
+				continue;
+			}
 			int t = clock();
 			Pos p;
 			if (mb.moveCount == 0)
 				p = Pos(7, 7);
 			else {
+				pauseTime = false;
 				p = mb.policy();
-
+				pauseTime = true;
 			}
 			mb.move(p);
 
+			/*
 #ifdef DEBUG_main
-
 			cout << "timemove=" << timemove << endl;
 			cout << "movecount=" << movecount << endl;
 			cout << "timeReadTree=" << timereadtree << endl;
@@ -161,28 +223,97 @@ void game() {
 			shape4count = 0;
 			timetemp = 0;
 			lcCount = 0;
-		}
-		else if (r == 'S')
-		{
-			cout <<"score : "<< mb.getScore() << endl;
+			*/
 		}
 		else if (r == 'U') {
 			mb.undo();
 		}
-		else {
+		else if (r == 'Z') {
+			string s=mb.stdHistoryMove();
+			continue;
+		}
+		else if (r == 'P') {
+			pauseTime = !pauseTime;
+			continue;
+		}
+		else if (r=='S') {
+			cout << "start 五手n打" << endl;
+			cin >> r;
 			cin >> h;
-			if (h <= 0 || h>15)continue;
+
+#ifdef STEP5_OUT_N
+			if (mb.moveCount == 4) {
+
+				Pos* t_pos = new Pos[STEP5_OUT_COUNT];
+				int t = 0;
+				int t_v = MIN_INT;
+				int i = 0;
+				while (1) {
+					if (h <= 0 || h > 15)continue;
+					if (r > 'O' || r < 'A') continue;//输入不合法
+
+					t_pos[i] = Pos(r - 'A', 15 - h);
+					mb.move(t_pos[i]);
+					int tt = -mb.getScore();
+					cout << tt << endl;
+					mb.undo();
+					if (t_v > tt) {
+						t_v = tt;
+						t = i;
+					}
+
+					i++;
+					if (i >= STEP5_OUT_COUNT) break;
+
+					cin >> r;
+					cin >> h;
+				}
+				cout << "五手n打" << endl;
+				cout << "选择：(" <<
+#ifdef STD_OUT_FORM
+					STD_OUT_X(t_pos[t].first)
+#else
+					t_pos[t].first
+#endif // STD_OUT_FORM
+					<< ", " <<
+#ifdef STD_OUT_FORM
+					STD_OUT_Y(t_pos[t].second)
+#else
+					t_pos[t].second
+#endif // STD_OUT_FORM
+					<< ")" << endl;
+				mb.move(t_pos[t]);
+				cout << mb << endl;
+				delete t_pos;
+				continue;
+			}
+#endif // STEP5_OUT_N
+			if (h <= 0 || h > 15)continue;
 			if (r > 'O' || r < 'A') continue;//输入不合法
 			Pos p = Pos(r - 'A', 15 - h);
+			cout << "end s" << endl;
 			mb.move(p);
+		}
+
+		else {
+			if (r > 'O' || r < 'A') {
+				cout << "invalid char" << endl;
+				continue;//输入不合法
+			}
+			cin >> h;
+			if (h <= 0 || h > 15) {
+				cout << "invalid int" << endl;
+				continue;
+			}
+			
+
+			mb.move(r-'A',15-h);
 		}
 
 
 		cout << mb << endl;
 
-
+		mb.checkBoard();
 	}
-
-
 
 }

@@ -4,7 +4,7 @@
 #include "hashTable.h"
 
 
-board::board()
+board::board():db(this)
 {
 	memset(chess, EMPTY, sizeof(chess));
 	turnToMove = ME;
@@ -31,12 +31,13 @@ board::board()
 
 	initStrIndexs();
 	initZobrish();
+	db.init();
 }
-board::board(const board& b)
+board::board(const board& b):db(this)
 {
 	//memcpy(chess, b.chess, sizeof(chess));
 }
-board::board(int chess[][15]) {
+board::board(int chess[][15]):db(this) {
 
 
 	turnToMove = ME;
@@ -85,7 +86,7 @@ board::board(int chess[][15]) {
 ostream& operator<<(ostream& os, board& b)
 {
 	//score
-	
+	/*
 	os << "---------------Score-------------" << endl;
 	os << "---  0 -  1 -  2 -  3 -  4 -  5 -  6 -  7 -  8 -  9 -  0 -  1 -  2 -  3 -  4 -" << endl;
 	for (int i = 0; i < ROW; i++) {
@@ -130,7 +131,7 @@ ostream& operator<<(ostream& os, board& b)
 
 	os << "-------------Shape---------------" << endl;
 
-
+	*/
 	
 
 
@@ -215,8 +216,9 @@ int board::VCFSearch() {
 	Pos moves[225];
 	int winlossFlag = 0;
 	if (turnToMove == vcfAttacker) {//进攻方走法
-
+		winlossFlag = MAX_INT;
 		int mc = genVCFAttackMove(moves);
+
 		int rc = 0;
 
 		while (mc--) {
@@ -232,9 +234,8 @@ int board::VCFSearch() {
 
 	}
 	else {//防守方走法
-
-		
 		int mc = genVCFDefendMove(moves);
+		if (mc == 0)return MIN_INT;
 		int rc = 0;
 
 		while (mc--) {
@@ -307,19 +308,27 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 
 	//step 2： VCF
 	if (depth == maxdept) {
-		/*
+
 		//cout << *this << endl;
 		int turnIndex = piece();
 		VCFdepth = 0;
-
 		int posScore = (ABS(7 - lastMove()->first) + ABS(7 - lastMove()->second));
+		int score = getScoreOneStep()		//当前步得分
+			//+turnValeDelta				//修正奇数层差值
+			//- posScore * posScoreMulti	//位置得分
+			;
+		score = score * curentMulti - staticValues[depth - 1];
+
+
+
+		/*
 		if (turnToMove == policy_turn) {//下一步是我方
 			if (oppoShape()[C4]  == 0 && myShape()[H3]+myShape()[C3]+myShape()[Q3]>0) {
 				vcfAttacker = turnToMove;
-
-				int vcfScore = VCFSearch();//我可以尝试VCF
-				if (vcfScore != 0) {
-				//cout << *this << endl;
+//cout << *this << endl;
+				int vcfScore = VCFSearch();//我有VCF
+				if (vcfScore > 10000) {
+				
 					return vcfScore;
 				}
 					
@@ -338,12 +347,6 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 			
 
 
-			int score = getScoreOneStep()
-				//-posScore*posScoreMulti
-				;
-
-			score = score* curentMulti - staticValues[depth-1];
-			return score;
 		}
 		else//下一步是对方
 		{
@@ -352,7 +355,7 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 				vcfAttacker = turnToMove;
 				int vcfScore = VCFSearch();
 
-				if (vcfScore != 0) {
+				if (vcfScore >10000) {
 //cout << *this << endl;
 //int vcfScore = VCFSearch();
 					return vcfScore;
@@ -360,23 +363,11 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 					
 			}
 
-
-
-			int score = getScoreOneStep()
-				//+turnValeDelta //修正奇数层差值
-				//- posScore * posScoreMulti
-				;//位置得分
-			score = score* curentMulti + staticValues[depth - 1];
-			return score;
 		}
 		*/
-		
-		int score = getScoreOneStep()
-			//+turnValeDelta //修正奇数层差值
-			//- posScore * posScoreMulti
-			;//位置得分
-	//
-		score = score * curentMulti - staticValues[depth - 1];
+
+		//vcf未杀，取局面估值
+
 //cout << *this << endl;
 		return score;
 
@@ -412,7 +403,8 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 			//cout << *this << endl;
 			return tte->value;
 		}
-		if (tte->depth ==maxdept &&tte->step  == moveCount  && tte->valueType!=value_type_unvalid) return tte->value;//同一次决策中重复局面提前返回
+		if (tte->depth ==maxdept &&tte->step  == moveCount  && tte->valueType!=value_type_unvalid) 
+			return tte->value;//同一次决策中重复局面提前返回
 	}
 
 
@@ -517,7 +509,7 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 
 
 
-	return maxValue<0?maxValue: maxValue-1;
+	return maxValue<0?maxValue+1: maxValue-1;
 }
 
 
@@ -529,7 +521,67 @@ pair<int, int> board::policy()
 	TIMEBEGIN = clock();
 
 #endif
+
+	//开局库查询
+
+
+
+	TTEntrace* tte = TT.find(zobristKey);
+	//Pos dbp = db.readLine(historyMoves, moveCount);
+	if (tte) {
+
+		if (tte->valueType == ValueType::value_type_db) {//开局库存在
+			Pos bestDbMove = tte->moves[0];
+			int eval = 255;
+
+			for (int i = 0;i < tte->moveCount;i++) {
+				move(tte->moves[i]);
+				
+				TTEntrace* temp = TT.find(zobristKey);
+				
+				if (temp && temp->dbWiner == turnToMove) {
+					if (eval > temp->dbEval) {//胜利方选最短值
+						eval = temp->dbEval;
+						bestDbMove = tte->moves[i];
+					}
+	
+				}
+				if (temp && eval == 255 && temp->dbWiner != turnToMove) {//失败方选最大值
+					if ((-eval) < temp->dbEval) {//胜利方选最短值
+						eval = -temp->dbEval;
+						bestDbMove = tte->moves[i];
+					}
+				}
+				undo();
+				
+			}
+			cout << "from database" << endl;
+			cout << " best = (" <<
+#ifdef STD_OUT_FORM
+				STD_OUT_X(bestDbMove.first)
+#else
+				bestMove.first
+#endif // STD_OUT_FORM
+				<< ", " <<
+#ifdef STD_OUT_FORM
+				STD_OUT_Y(bestDbMove.second)
+#else
+				bestMove.second
+#endif // STD_OUT_FORM
+				<< ") " << "eval="<< eval << endl;
+			return bestDbMove;
+
+		}/*
+		else if (tte->valueType != ValueType::value_type_unvalid) {
+			if (tte->value > 10000) return tte->moves[0];
+		}
+		*/
+	}
+
+
+
 	terminal = false;
+
 	//生成根节点着法
 	pair<int, int> poss[225];
 	int values[225]{ 0 };
@@ -806,33 +858,6 @@ int board::getScore() {
 int board::getScoreDelta() {
 	int scoreMe = strTree::getScoreSide(shapesChange[0]);
 	int scoreOppo = strTree::getScoreSide(shapesChange[1]);
-	/*
-	const int* values = VALUE_GDEFAULT;
-	int* v = shapesChange[0];
-
-	//我方权值
-	int score =
-		v[0] * values[0] +
-		v[1] * values[1] +
-		v[2] * values[2] +
-		v[3] * values[3] +
-		v[4] * values[4] +
-		v[5] * values[5] +
-		v[6] * values[6] +
-		v[7] * values[7]
-		;
-		int score =
-		v[0] * values[0] +
-		v[1] * values[1] +
-		v[2] * values[2] +
-		v[3] * values[3] +
-		v[4] * values[4] +
-		v[5] * values[5] +
-		v[6] * values[6] +
-		v[7] * values[7]
-		;
-		*/
-
 	if (turnToMove == ME) {
 
 		return scoreMe * defendMulti - scoreOppo ;
@@ -851,11 +876,11 @@ int board::getScoreOneStep() {
 
 	if (turnToMove == ME) {
 
-		return scoreMe - scoreOppo * defendMulti;
+		return scoreMe * defendMulti- scoreOppo ;
 	}
 	else {
 
-		return scoreOppo - scoreMe * defendMulti;
+		return scoreOppo  * defendMulti- scoreMe;
 	}
 }
 

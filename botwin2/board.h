@@ -7,6 +7,8 @@
 #include <random>
 #include "config.h"
 #include "hashTable.h"
+#include "database.h"
+
 
 template<class T1, class T2>
 inline auto _max(const T1 a, const T2 b) {
@@ -61,6 +63,8 @@ public:
 	playerEnum vcfAttacker;
 	playerEnum policy_turn = EMPTY;
 	int staticValues[100]{ 0 };
+
+	database db;
 
 private:
 	//行号 列号 方向 字符串索引/字符索引
@@ -331,13 +335,14 @@ public:
 		}
 		return validIndex;
 	}
+
 	int genVCFAttackMove(Pos* ps) {//生成 进攻活三和冲四
 		int c = genAreaAll(ps);
 		int validIndex = 0;
 		//cout << *this << endl;
 		for (int i = 0;i < c;i++) {
 			move(ps[i]);
-			if (shapesChange[piece(vcfAttacker)][C4]+ shapesChange[piece(vcfAttacker)][H4] > 0) {
+			if (shapesChange[oppoIndex][C4]+ shapesChange[oppoIndex][H4] > 0) {
 				//cout << *this << endl;
 				ps[validIndex].first = ps[i].first;
 				ps[validIndex++].second = ps[i].second;
@@ -348,6 +353,7 @@ public:
 
 		return validIndex;
 	}
+
 	int quickWinCheck() {//返回 1 win    0 未知     -1 输
 
 		if (oppoShape()[WIN])//对方已经连5
@@ -472,7 +478,7 @@ public:
 				}
 			}
 			if (m < LC_LOW //必输点
-				|| i>0 && (values[0] - m > LC_DELTA)  //与 当前层 决策最大值比较低
+				//|| i>0 && (values[0] - m > LC_DELTA)  //与 当前层 决策最大值比较低
 					
 				) {
 				break;
@@ -670,6 +676,85 @@ public:
 		if (moveCount >= n)return historyMoves + (moveCount - n);
 		else return nullptr;
 	}
+
+
+
+
+	//GAME检验
+	bool checkBoard() {
+
+		if (shapesChange[0][H3] + shapesChange[0][Q3] + shapesChange[0][C3] > 1) {
+			cout << "black forbiden: 33" << endl;
+			return false;
+		}
+		else if (shapesChange[0][H4]+ shapesChange[0][C4] > 1) {
+			cout << "black forbiden: 44" << endl;
+			return false;
+		}
+		else if (shapesChange[0][WIN]> 1) {
+			cout << "black forbiden: >5" << endl;
+			return false;
+		}
+		else if (shapesChange[0][WIN] == 1 ) {
+
+			cout << "Black WIN" << endl;
+			return false;
+		}
+		else if (shapesChange[1][WIN]) {
+			cout << "White WIN" << endl;
+			return false;
+		}
+		if (moveCount == 225) {
+			cout << "full<" << endl;
+			return false;
+		}
+
+		return true;
+	}
+
+	//输出历史表
+	string stdHistoryMove() {
+		string out = "{[C5][][][先/后手胜][time][2024 CCGC];";
+		for (int i = 0;i < moveCount;i++) {
+			string ap;
+			if (i % 2 == 0) ap = "B(";
+			else ap = "w(";
+
+			char x[3] = { STD_OUT_X(historyMoves[i].first),0 ,0};
+			ap.append(x);
+			ap.append(",");
+			char* chi = x;
+			chi = itoa(STD_OUT_Y(historyMoves[i].second),x,10);
+			ap.append(chi);
+			ap.append(")");
+			out.append(ap);
+			if (i == moveCount - 1)
+				break;
+			out.append(";");
+
+			
+		}
+		out.append("}");
+		cout << out << endl;
+		return out;
+	}
+	//数据库走法
+	Pos moveByDataBase(Pos* line) {
+		int step = 0;
+		while (step<=moveCount)
+		{
+			if (line[step].first == historyMoves[step].first && line[step].second == historyMoves[step].second)
+				step++;
+			else return Pos(-1, -1);
+
+		}
+
+		return line[step];
+
+	}
+
+
+
 
 };
 

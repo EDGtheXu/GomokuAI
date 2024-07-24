@@ -1,15 +1,33 @@
 #pragma once
+#ifndef DATABASE
+#define DATABASE
+
+
+
+
+#include<map>
+#include"config.h"
+
 
 class dataNode
 {
 public:
-	dataNode();
-	~dataNode();
+	dataNode(Pos pos):p(pos),ans(Pos(-1,-1)) {};
+	~dataNode() {};
 
-private:
+	Pos p;
+	Pos ans;
+	int eval = 0;
 
+	map<Pos,dataNode*> next;
+
+	dataNode* findNext(Pos& p) {
+		auto it =  next.find(p);
+		if (it != next.end())return it->second;
+		return nullptr;
+	}
 };
-
+class board;
 
 class database
 {
@@ -17,16 +35,28 @@ class database
 private:
 	dataNode* root;
 
-	bool changed;//是否已经变换
-	int offsetx;//x轴偏移
-	int offsety;//y轴偏移
-	int rotate;//顺时针旋转角度
-	bool rotHor;//水平翻转
-	bool rotVer;//竖直翻转
+
 public:
-	database() {
-		
-	}
+	database(board*b) {
+		root = new dataNode(Pos(7, 7));
+		mb = b;
+	};
+	board* mb;
+	void genLine(string str);
+
+	Pos readLine(Pos* ps,int count);
+	void init();
+
+
+
 
 };
 
+
+
+
+
+
+
+
+#endif // !DATABASE
