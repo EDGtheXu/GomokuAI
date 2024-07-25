@@ -203,22 +203,22 @@ int board::VCFSearch() {
 
 	//step 2: 深度限制
 	
-	VCFdepth++;
+
 	if (VCFdepth == MAX_VCF_DEPTH) return 0;
 	//step 3：查找置换表
 	Move* tte = TT.find(zobristKey);
 
 
-	if (tte && tte->turn == turnToMove && tte->valueType==value_type_VCF) {//命中置换表
+	if (tte  && tte->valueType==value_type_VCF) {//命中置换表
 		return tte->value;
 	}
-	
+
+	VCFdepth++;
 	Pos moves[225];
 	int winlossFlag = 0;
+	Pos best;
 	if (turnToMove == vcfAttacker) {//进攻方走法
-		winlossFlag = MAX_INT;
 		int mc = genVCFAttackMove(moves);
-
 		int rc = 0;
 
 		while (mc--) {
@@ -227,7 +227,14 @@ int board::VCFSearch() {
 			winlossFlag = -VCFSearch();
 
 			undo();
-			if (winlossFlag > 10000) break;
+			if (winlossFlag > 10000) {
+				if (VCFdepth == 1) {
+					//cout << *this << endl;
+					int aa = 1;
+				}
+				best = moves[rc];
+				break;
+			}
 			rc++;
 		}
 
@@ -235,7 +242,7 @@ int board::VCFSearch() {
 	}
 	else {//防守方走法
 		int mc = genVCFDefendMove(moves);
-		if (mc == 0)return MIN_INT;
+		if (mc == 0) winlossFlag = MIN_INT;
 		int rc = 0;
 
 		while (mc--) {
@@ -244,28 +251,34 @@ int board::VCFSearch() {
 			winlossFlag = -VCFSearch();
 
 			undo();
-			if (winlossFlag < -10000) break;
+			if (winlossFlag > -10000)
+				if (VCFdepth == 2) {
+					//cout << *this << endl;
+					int aa = 1;
+				}
+				break;
 			rc++;
 		}
 	}
 
 	if(!tte)
 		tte = new Move();
-	
-	tte->value = winlossFlag;
-	tte->turn = turnToMove;
-	TT.AddItem(zobristKey,tte);
 
 	//置换表保存
-	if (vcfAttacker == turnToMove && winlossFlag > 10000) {
+	tte->value = winlossFlag;//可以记录必输的和必胜的
+	TT.AddItem(zobristKey,tte);
 
+
+	//if (vcfAttacker == turnToMove && winlossFlag > 10000) {
+		tte->bestMove = best;
 		tte->valueType = value_type_VCF;
-	}
+	//}
 
 	VCFdepth--;
+
+
+	if (winlossFlag) return winlossFlag;
 	return 0;
-
-
 }
 
 
@@ -314,8 +327,8 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 			;
 		score = score * curentMulti - staticValues[depth - 1];
 	//step 2： VCF
-	if (depth ==maxdept == 4||depth ==maxdept == 5) {
-
+	if (depth ==maxdept) {
+		//return score;
 		//cout << *this << endl;
 		int turnIndex = piece();
 		VCFdepth = 0;
@@ -328,7 +341,12 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 		if (turnToMove == policy_turn) {//下一步是我方
 			if (oppoShape()[C4]  == 0 && myShape()[H3]+myShape()[C3]+myShape()[Q3]>0) {
 				vcfAttacker = turnToMove;
-//cout << *this << endl;
+
+				if (depth == 2 &&
+					chess[3][11] == -1 && chess[1][9] == 1) {
+					int aa = 1;
+				}
+
 				int vcfScore = VCFSearch();//我有VCF
 				if (vcfScore > 10000) {
 				
@@ -336,19 +354,6 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 				}
 					
 			}
-
-//			else {//对方可能有VCF
-//				vcfAttacker = turnToMoveOppo;
-//				
-//				int vcfScore = VCFSearch();
-//
-//				if (vcfScore != 0) {
-//cout << *this << endl;
-//					return vcfScore;
-//				}
-//			}
-			
-
 
 		}
 		else//下一步是对方
@@ -359,8 +364,7 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 				int vcfScore = VCFSearch();
 
 				if (vcfScore >10000) {
-//cout << *this << endl;
-//int vcfScore = VCFSearch();
+
 					return vcfScore;
 				}
 					
@@ -390,9 +394,11 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 
 
 	if (!tte ||//未命中置换表
-		tte && tte->valueType == 0) {//值不合理
-		if(!tte) tte = new Move();
+		tte && tte->valueType == 0 ||//值不合理
+		tte && tte->valueType== ValueType::value_type_VCF) {//vcf要重新获取moves
 
+		if(!tte) tte = new Move();
+		if (tte->valueType == value_type_VCF && tte->value >10000) return tte->value;//vcf有杀直接返回
 
 		int c = genAreaAll(tte->moves);
 #ifdef FULLSEARCH
@@ -485,6 +491,7 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 		alpha = maxValue > alpha ? maxValue : alpha;
 
 		if (maxValue >= beta) {
+			bestMove = poss[rc];
 
 			break;
 		}
@@ -505,7 +512,7 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 	if (tte->value > -10000 && tte->value < 10000) {
 		tte->moveCount = TTrefresh(tte->moves, tte->moveCount, tte->values);//重新排序
 		tte->turn = turnToMove;
-		
+		tte->bestMove = bestMove;
 	}
 
 	if (depth == 1) {
@@ -528,10 +535,19 @@ pair<int, int> board::policy()
 
 #endif
 
-	//开局库查询
 
 
 
+
+
+	//深度优先算杀
+	VCFdepth = 0;
+	vcfAttacker = turnToMove;
+	int dfs = VCTSearch();
+
+
+
+	//置换表查询
 	TTEntrace* tte = TT.find(zobristKey);
 	//Pos dbp = db.readLine(historyMoves, moveCount);
 	if (tte) {
@@ -577,11 +593,24 @@ pair<int, int> board::policy()
 				<< ") " << "eval="<< eval << endl;
 			return bestDbMove;
 
-		}/*
-		else if (tte->valueType != ValueType::value_type_unvalid) {
-			if (tte->value > 10000) return tte->moves[0];
 		}
-		*/
+		else if (tte->valueType == ValueType::value_type_VCF) {
+			if (tte->value > 10000) {
+				bestMove = tte->bestMove;
+
+				cout << "from VCF in hashtable" << endl;
+				return bestMove;
+			}
+		}
+		else if (tte->valueType == ValueType::value_type_ab) {
+			if (tte->value > 10000 || tte->value<-10000) {
+				bestMove = tte->bestMove;
+
+				cout << "from ab in hashtable" << endl;
+				return bestMove;
+			}
+		}
+		
 	}
 
 
@@ -589,9 +618,9 @@ pair<int, int> board::policy()
 	terminal = false;
 
 	//生成根节点着法
-	pair<int, int> poss[225];
+	Pos poss[225];
 	int values[225]{ 0 };
-	int count = genRoot(poss, values);
+	int count = genRoot(poss, values);//要根节点排序
 	int curmax = MIN_INT;
 	Pos best = poss[0];
 	this->policy_turn = turnToMove;
@@ -602,11 +631,24 @@ pair<int, int> board::policy()
 	int depth = 2;
 
 
+	if (values[0] < -10000) {//下一步提前判断输
+		cout << "quick loss" << endl;
+		return poss[0];
+	}
+	
+
+
+
+
+
 
 
 	//迭代加深
+	Pos layBest;//保存层结果，bestValue会改变
+	Pos laySeq[225];//层排序
 	for (depth = START_DEPTH; depth <= MAX_DEPTH && !terminal; depth +=1)
 	{
+		
 		int _count = count;
 		rc = 0;
 		curmax = MIN_INT;
@@ -616,8 +658,6 @@ pair<int, int> board::policy()
 		int steptime = clock();
 #endif // DEBUG_POLICY
 		while (_count--) {
-			if (values[rc] < -10000) continue;
-
 			move(poss[rc]);
 
 			//cout << *this << endl;
@@ -630,7 +670,7 @@ pair<int, int> board::policy()
 			if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) terminal = true;
 			if (terminal)break;
 #endif
-			//cout <<"pol:("<< poss[rc].first << " , "<<poss[rc].second << ") , eval:" << t << endl<<endl<<endl;
+			//cout <<"pol:("<< poss[rc].first << " , "<<poss[rc].second << ") , eval:" << t <<endl;
 			if (t > curmax)
 			{
 				curmax = t;
@@ -644,13 +684,17 @@ pair<int, int> board::policy()
 
 		count = Rootfresh(poss, count, values);
 
-
 #ifdef TIME_CONTROL
-		if (terminal) break;
+		if (terminal) {
+			bestMove = layBest;
+			break;
+		}
 #endif
+		//层保存
 		bestMove = best;
-		bestVelue = curmax;//奇数层要取反
-
+		bestVelue = curmax;
+		layBest = best;
+		memcpy(laySeq, poss, sizeof(Pos) * count);
 		//输出层结果
 #ifdef DEBUG_POLICY
 		cout << "depth = " << depth << "-" << reachMaxDepth << ", eval = " << bestVelue << ", best = (" << 
@@ -668,6 +712,10 @@ pair<int, int> board::policy()
 #endif // STD_OUT_FORM
 			<< ")" << ", time = " << clock() - steptime << endl;
 #endif // DEBUG_POLICY
+
+		if (bestVelue > 10000) {
+			depth++;break;
+		}
 
 		/*
 
@@ -701,6 +749,13 @@ pair<int, int> board::policy()
 
 
 
+
+
+
+
+
+
+
 	//输出结果
 #ifdef DEBUG_POLICY
 	cout << endl << "TOTAL:" << "max depth = " << depth - 1 << ", eval = " << bestVelue <<
@@ -728,13 +783,13 @@ pair<int, int> board::policy()
 		for (int i = 0;i < STEP5_OUT_N;i++) {
 			cout << "(" << 
 #ifdef STD_OUT_FORM
-				STD_OUT_X(poss[i].first)
+				STD_OUT_X(laySeq[i].first)
 #else
 				poss[i].first
 #endif // STD_OUT_FORM
 				<< ", " <<
 #ifdef STD_OUT_FORM
-				STD_OUT_Y(poss[i].second)
+				STD_OUT_Y(laySeq[i].second)
 #else
 				poss[i].second
 #endif // STD_OUT_FORM
@@ -887,3 +942,116 @@ int board::getScoreOneStep() {
 	}
 }
 
+int board::VCTSearch() {
+	searchNode++;
+	bool debug =0;
+	if(debug) cout << *this << endl;
+	//step 1: 提前胜负判断
+	int winFlag = quickWinCheck();
+	if (winFlag)
+		return MAX_INT * winFlag;
+
+
+	//step 2: 深度限制
+
+
+	if (VCFdepth >= MAX_VCT_DEPTH) {
+		return 0;
+	}
+
+	//step 3：查找置换表
+	Move* tte = TT.find(zobristKey);
+
+	if (tte  && tte->valueType == value_type_VCF) {//命中置换表
+
+		return tte->value;
+	}
+	VCFdepth++;
+	Pos moves[225];
+	Pos best;
+	int winlossFlag = 0;
+	if (turnToMove == vcfAttacker) {//进攻方走法
+
+		int mc = genVCTAttackMove(moves);
+
+		int rc = 0;
+
+		while (mc--) {
+			move(moves[rc]);
+			//if(debug) cout << *this << endl;
+			//if (
+			//	chess[6][14]==-1 &&
+			//	
+			//	chess[5][13] == 1
+
+
+			//	) {
+
+			//	int aa = 1;
+			//}
+
+			winlossFlag = -VCTSearch();
+
+
+				if (VCFdepth == 1) {
+					cout << *this << endl;
+					int aa = 1;
+				}
+			undo();
+
+
+
+			if (winlossFlag > 10000) {//进攻方有一个点能杀即可
+
+				best = moves[rc];
+				break;
+			}
+			rc++;
+		}
+
+
+	}
+	else {//防守方走法
+		winlossFlag = MIN_INT;
+		int mc = genVCTDefendMove(moves);
+
+		int rc = 0;
+
+		while (mc--) {
+			move(moves[rc]);
+			if(debug)cout << *this << endl;
+			winlossFlag = -VCTSearch();
+
+			undo();
+			if (winlossFlag > -10000) {//防守方有一个点能防守即可
+				if (VCFdepth == 2) {
+					//cout << *this << endl;
+					int aa = 1;
+				}
+				break;
+			}
+			rc++;
+		}
+	}
+
+	if (!tte)
+		tte = new Move();
+
+	tte->value = winlossFlag;
+	tte->turn = turnToMove;
+	TT.AddItem(zobristKey, tte);
+
+	//置换表保存
+	if (vcfAttacker == turnToMove && winlossFlag > 10000) {
+
+		tte->bestMove = best;
+		tte->valueType = value_type_VCF;
+	}
+
+
+	VCFdepth--;
+	if (winlossFlag) return winlossFlag;
+	return 0;
+
+
+}

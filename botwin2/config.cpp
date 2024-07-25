@@ -40,7 +40,7 @@ const int VALUE_GDEFAULT[SHAPE_TYPES]{	//	权重
 // 
 //总体设置
 int START_DEPTH =1;
-int MAX_DEPTH = 19;
+int MAX_DEPTH = 15;
 
 int range = 2;
 
@@ -50,11 +50,11 @@ int LC_LOW = -10000;//坏点必输值
 int LC_KEEP = 15;//LC保留分支数
 int TT_KEEP = 15;//置换表保留分支数
 int keepLen = 20;//最大保留分支数(按层递减)
-int keepLenMin = 15;//最小保留分支数
+int keepLenMin = 10;//最小保留分支数
 
 
-int MAX_VCT_DEPTH = 7;//VCT可扩展层数
-int MAX_VCF_DEPTH =10;//VCF可扩展层数
+int MAX_VCT_DEPTH = 17;//VCT可扩展层数
+int MAX_VCF_DEPTH =20;//VCF可扩展层数
 
 int posScoreMulti = 1;//位置得分系数
 float defendMulti = 1;//防御系数;  4为标准

@@ -193,6 +193,9 @@ public:
 	//搜索
 	int abSearch(int depth, int alpha, int beta, int maxdept);
 	int VCFSearch();
+	int VCTSearch();
+
+	void VCTthread();
 
 	//找可能落子点
 	int getAllPossiblePos(playerEnum p, int depth, pair<int, int>* res, int* w);
@@ -326,7 +329,8 @@ public:
 		int validIndex = 0;
 		for (int i = 0;i < c;i++) {
 			move(ps[i]);
-			if (shapesChange[piece(vcfAttacker)][C4] < 0 ) {
+
+			if (shapesChange[piece(vcfAttacker)][C4]<0) {
 				ps[validIndex].first = ps[i].first;
 				ps[validIndex++].second = ps[i].second;
 			}
@@ -342,7 +346,7 @@ public:
 		//cout << *this << endl;
 		for (int i = 0;i < c;i++) {
 			move(ps[i]);
-			if (shapesChange[oppoIndex][C4]+ shapesChange[oppoIndex][H4] > 0) {
+			if (shapesChange[oppoIndex][C4] + shapesChange[oppoIndex][H4]  > 0) {
 				//cout << *this << endl;
 				ps[validIndex].first = ps[i].first;
 				ps[validIndex++].second = ps[i].second;
@@ -354,7 +358,48 @@ public:
 		return validIndex;
 	}
 
+	int genVCTDefendMove(Pos* ps) {//生成 防御活三和冲四
 
+
+		int c = genAreaAll(ps);
+		int validIndex = 0;
+		for (int i = 0;i < c;i++) {
+			move(ps[i]);
+			int flag = quickWinCheck();
+			
+			if (flag!=1) {
+				ps[validIndex].first = ps[i].first;
+				ps[validIndex++].second = ps[i].second;
+			}
+
+			undo();
+		}
+		return validIndex;
+	}
+
+	int genVCTAttackMove(Pos* ps) {//生成 进攻活三和冲四 和防御活四
+		int c = genAreaAll(ps);
+		LC(ps, c);
+		int validIndex = 0;
+		//cout << *this << endl;
+		for (int i = 0;i < c;i++) {
+			move(ps[i]);
+			if (shapesChange[oppoIndex][C4] + shapesChange[oppoIndex][H4] + shapesChange[oppoIndex][H3] + shapesChange[oppoIndex][Q3] > 0
+				||shapesChange[selfIndex][C4]<0
+				) {
+				//cout << *this << endl;
+				Pos temp = ps[validIndex];
+				ps[validIndex++] = ps[i];
+				ps[i] = temp;
+
+			}
+
+			undo();
+		}
+
+
+		return validIndex;
+	}
 
 	/*
 	int quickWinCheck() {//返回 1 win    0 未知     -1 输
@@ -479,6 +524,73 @@ public:
 			return -MAX_INT+3;
 		}
 		return 0;
+
+
+		if (turnToMove != ME) {//判断白棋是否必赢、输，上步黑是否是禁手
+			if (oppoShape()[WIN]) {//对方已经连5
+				if (oppoShape()[WIN] > 1) return MAX_INT;//是长连
+				return -MAX_INT;
+			}
+			else if (myShape()[WIN] == 1) {//白方胜 
+				return MAX_INT-1;
+			}
+			else if (myShape()[H4] || myShape()[C4] || myShape()[WIN]) {//白方有 活4 冲4 ，可以直接 连5 ， 白方胜
+				//cout << *this << endl;
+				return MAX_INT-2;
+			}
+			else if (oppoShape()[H4]) {//黑方有 活4 ，不确定
+				//cout << *this << endl;
+				return -MAX_INT+3;
+			}
+			/*
+			else if (shapesChange[oppoIndex][C4]&&shapesChange[oppoIndex][H3]) {//对方 活3 冲4，对方胜//堵冲四同时自己形成活三自己胜
+				//cout << *this << endl;
+				return -1;
+			}*/
+			else if ((myShape()[H3] || myShape()[Q3]) && !oppoShape()[C4]) {//白方 有3 且 对方 无冲4， 我方胜
+
+				//cout << *this << endl;
+				return MAX_INT-4;
+			}
+			else if ((shapesChange[oppoIndex][H3] + shapesChange[oppoIndex][Q3] > 1) || (shapesChange[oppoIndex][C4] + shapesChange[oppoIndex][H4] > 1)) {//黑方上步是禁手
+				//cout << *this << endl;
+				return MAX_INT-5;
+			}
+
+		}
+		else {
+			if (shapesChange[0][H3] + shapesChange[0][Q3] > 1 ||
+				shapesChange[0][H4] + shapesChange[0][C4] > 1 ||
+				shapesChange[0][WIN] > 1 ||
+				shapesChange[0][BAN]	//1011101单独处理
+				) return -MAX_INT;//禁手规则
+			if (oppoShape()[WIN])//对方已经连5
+				return -MAX_INT+1;
+			else if (shapes[0][H4] || shapes[0][C4] || shapes[0][WIN]) {//黑方有 活4 冲4 ，可以直接 连5 
+				//cout << *this << endl;
+				return MAX_INT-2;
+			}
+			else if (oppoShape()[H4]) {//白方有 活4 ，对方胜
+				//cout << *this << endl;
+				return -MAX_INT+3;
+			}/*
+			else if (shapesChange[oppoIndex][C4]&&shapesChange[oppoIndex][H3]) {//对方 活3 冲4，对方胜//堵冲四同时自己形成活三自己胜
+				//cout << *this << endl;
+				return -1;
+			}*/
+			else if ((myShape()[H3] || myShape()[Q3]) && !oppoShape()[C4]) {//我方 有3 且 对方 无冲4， 我方胜，黑棋可能长连
+
+				//cout << *this << endl;
+				return MAX_INT-4;
+			}
+			else if (!myShape()[H3] && !myShape()[Q3] && !myShape()[C3] && shapesChange[oppoIndex][H3] + shapesChange[oppoIndex][Q3] > 1) {//我方 无3 且 白方 双3， 白方胜
+				//cout << *this << endl;
+				return -MAX_INT+5;
+			}
+		}
+
+		return 0;
+
 	}
 
 	//启发策略
@@ -646,6 +758,7 @@ public:
 		}
 		*/
 		move(p);
+		
 		int res = -getScoreDelta();
 		undo();
 		return res;
@@ -727,6 +840,8 @@ public:
 #endif // debug
 
 		moveCount--;
+		selfIndex = (selfIndex + 1) % 2;
+		oppoIndex = (oppoIndex + 1) % 2;
 		Pos p = historyMoves[moveCount];
 		removeMoveShape(p);
 		setChess(EMPTY, p);

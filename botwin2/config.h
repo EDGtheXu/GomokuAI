@@ -24,7 +24,7 @@
 
 
 #define DEBUG_BOTZONE
-#define TIME_CONTROL
+//#define TIME_CONTROL
 
 
 #define SWAP3				//ÈýÊÖ½»»»

@@ -200,6 +200,8 @@ void game() {
 			cout << mb << endl;
 			cout << STD_OUT_X(p.first) << ", " << STD_OUT_Y(p.second) << endl;
 			
+			/*
+
 #ifdef DEBUG_main
 			cout << "timemove=" << timemove << endl;
 			cout << "movecount=" << movecount << endl;
@@ -214,7 +216,7 @@ void game() {
 			cout << "TTE hit/unhit:" << TT.hitCount << "/" << TT.unHitCount << endl;
 			cout << "all time:" << clock() - t << endl;
 			cout << "lc count : " << lcCount << endl;
-#endif // DEBUG_main
+
 			timemove = 0;
 			movecount = 0;
 			TT.hitCount = 0;
@@ -224,7 +226,9 @@ void game() {
 			shape4count = 0;
 			timetemp = 0;
 			lcCount = 0;
-			
+#endif // DEBUG_main			
+
+			*/
 		}
 		else if (r == 'U') {
 			mb.undo();

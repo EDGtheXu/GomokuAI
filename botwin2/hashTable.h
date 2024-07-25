@@ -256,6 +256,7 @@ public:
     ~TTEntrace();
 
     Pos moves[200];//所有可移动的点
+    Pos bestMove;
     int values[200]{ 0 };//保存上次的估值
 
     int moveCount=0;
