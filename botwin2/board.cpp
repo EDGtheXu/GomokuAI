@@ -1,7 +1,71 @@
 #include "board.h"
-#include "config.h"
 #include "evaluate.h"
 #include "hashTable.h"
+#include <future>
+
+int VCFans[225]{ 0 };
+bool thsFinish[225];
+int finishCount = 0;
+bool threadTerminal = false;
+bool threadFinish[255];
+bool iskill = false;
+int timeStartPolicy;
+
+
+int VCFthread(board *b,int i) {
+
+	int ans = -b->VCTSearch();
+	if (ans>10000) {
+		VCFans[i] = ans;
+		threadTerminal = true;
+		cout << "kill:" << i << " pos: " << b->lastMove()->first << "," << b->lastMove()->second << endl;
+	}
+
+	++finishCount;
+	//cout << ans << endl;
+	return ans;
+}
+
+//多线程深度优先算杀
+void vcfthreadRoot(board b,Pos*tps,int tpc) {
+	//tpc = 1;
+	cout << "thread count:" << tpc << endl;
+	board* tbs = new board[tpc];
+	vector<std::future<int>>ths(tpc);
+	if (tpc > 0) {
+		
+
+		iskill = false;
+		for (int i = 0;i < tpc;i++) {
+			
+			thsFinish[i] = false;
+			VCFans[i] = 0;
+			threadFinish[i] = 0;
+			tbs[i] = b;
+			tbs[i].vcfAttacker = tbs[i].turnToMove;
+			tbs[i].VCFdepth = 0;
+			tbs[i].move(tps[i]);
+			ths[i] = async(VCFthread, tbs + i, i);
+
+		}
+
+		for (int i = 0;i < tpc;i++) {
+
+			int ans = ths[i].get();
+			if (ans > 10000) {
+				threadTerminal = true;
+				iskill = true;
+			}
+		}
+			
+
+	}
+
+}
+
+
+
+
 
 
 board::board():db(this)
@@ -35,8 +99,52 @@ board::board():db(this)
 }
 board::board(const board& b):db(this)
 {
-	//memcpy(chess, b.chess, sizeof(chess));
+	memset(chess, EMPTY, sizeof(chess));
+	turnToMove = ME;
+	turnToMoveOppo = -turnToMove;
+	moveCount = 0;
+	selfIndex = 0;
+	oppoIndex = 1;
+
+	for (int i = 0;i < 15;i++) {
+		for (int j = 0;j < 15;j++) {
+			strs[0][i][j] = '0';
+			strs[1][i][j] = '0';
+
+		}
+		for (int j = 0; j <= i; j++)
+		{
+			strs[2][i][j] = '0';
+			strs[3][i][j] = '0';
+
+			strs[2][28 - i][j] = '0';
+			strs[3][28 - i][j] = '0';
+		}
+	}
+
+	initStrIndexs();
+	initZobrish();
+	db.init();
+
+
+	for (int i = 0;i < b.moveCount;i++) {
+		move(b.historyMoves[i]);
+	}
+
 }
+
+board& board::operator=(const board& b)
+{
+	// TODO: 在此处插入 return 语句
+	for (int i = 0;i < b.moveCount;i++) {
+		move(b.historyMoves[i]);
+	}
+
+	return *this;
+}
+
+
+
 board::board(int chess[][15]):db(this) {
 
 
@@ -202,18 +310,18 @@ int board::VCFSearch() {
 
 
 	//step 2: 深度限制
-	
+	if (VCFdepth == MAX_VCF_DEPTH)
+		return 0;
 
-	if (VCFdepth == MAX_VCF_DEPTH) return 0;
 	//step 3：查找置换表
 	Move* tte = TT.find(zobristKey);
-
 
 	if (tte  && tte->valueType==value_type_VCF) {//命中置换表
 		return tte->value;
 	}
 
 	VCFdepth++;
+	//step 4: 循环着点 
 	Pos moves[225];
 	int winlossFlag = 0;
 	Pos best;
@@ -223,15 +331,10 @@ int board::VCFSearch() {
 
 		while (mc--) {
 			move(moves[rc]);
-			//cout << *this << endl;
 			winlossFlag = -VCFSearch();
 
 			undo();
 			if (winlossFlag > 10000) {
-				if (VCFdepth == 1) {
-					//cout << *this << endl;
-					int aa = 1;
-				}
 				best = moves[rc];
 				break;
 			}
@@ -241,21 +344,16 @@ int board::VCFSearch() {
 
 	}
 	else {//防守方走法
+		winlossFlag = MIN_INT;
 		int mc = genVCFDefendMove(moves);
-		if (mc == 0) winlossFlag = MIN_INT;
 		int rc = 0;
 
 		while (mc--) {
 			move(moves[rc]);
-			//cout << *this << endl;
 			winlossFlag = -VCFSearch();
 
 			undo();
 			if (winlossFlag > -10000)
-				if (VCFdepth == 2) {
-					//cout << *this << endl;
-					int aa = 1;
-				}
 				break;
 			rc++;
 		}
@@ -264,19 +362,17 @@ int board::VCFSearch() {
 	if(!tte)
 		tte = new Move();
 
-	//置换表保存
+	//step 5: 置换表保存
 	tte->value = winlossFlag;//可以记录必输的和必胜的
 	TT.AddItem(zobristKey,tte);
 
 
-	//if (vcfAttacker == turnToMove && winlossFlag > 10000) {
+	if (vcfAttacker == turnToMove && winlossFlag > 10000) {
 		tte->bestMove = best;
 		tte->valueType = value_type_VCF;
-	//}
+	}
 
 	VCFdepth--;
-
-
 	if (winlossFlag) return winlossFlag;
 	return 0;
 }
@@ -328,7 +424,7 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 		score = score * curentMulti - staticValues[depth - 1];
 	//step 2： VCF
 	if (depth ==maxdept) {
-		//return score;
+		return score;
 		//cout << *this << endl;
 		int turnIndex = piece();
 		VCFdepth = 0;
@@ -411,7 +507,7 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 		TT.AddItem(zobristKey, tte);
 	}
 	else if(tte ){//命中
-		if (tte->valueType!=0 &&( tte->value > 10000 || tte->value < -10000 && tte->turn == turnToMove)) {//必赢必输提前返回(应该加点判断)
+		if (tte->valueType!=0 &&( tte->value > 10000 || tte->value < -10000)) {//必赢必输提前返回(应该加点判断)
 			//cout << *this << endl;
 			return tte->value;
 		}
@@ -480,7 +576,10 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 #ifdef TIME_CONTROL
 		static int cmt = 7000;
 		if (cmt-- < 0) {
-			if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) terminal = true;
+			if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) {
+				terminal = true;
+				threadTerminal = true;
+			}
 			cmt = 7000;
 		}
 		if (terminal) break;
@@ -506,10 +605,11 @@ int board::abSearch(int depth, int alpha, int beta, int maxdept)
 	//step 9: 更新置换表
 
 	tte->value = maxValue;
-	tte->valueType = ValueType::value_type_ab;
+	
 	tte->depth = maxdept;
 	tte->step = moveCount;
 	if (tte->value > -10000 && tte->value < 10000) {
+		tte->valueType = ValueType::value_type_ab;
 		tte->moveCount = TTrefresh(tte->moves, tte->moveCount, tte->values);//重新排序
 		tte->turn = turnToMove;
 		tte->bestMove = bestMove;
@@ -532,18 +632,12 @@ pair<int, int> board::policy()
 {
 #ifdef TIME_CONTROL
 	TIMEBEGIN = clock();
-
+	timeStartPolicy = TIMEBEGIN;
 #endif
 
 
 
 
-
-
-	//深度优先算杀
-	VCFdepth = 0;
-	vcfAttacker = turnToMove;
-	int dfs = VCTSearch();
 
 
 
@@ -602,16 +696,18 @@ pair<int, int> board::policy()
 				return bestMove;
 			}
 		}
-		else if (tte->valueType == ValueType::value_type_ab) {
-			if (tte->value > 10000 || tte->value<-10000) {
-				bestMove = tte->bestMove;
-
-				cout << "from ab in hashtable" << endl;
-				return bestMove;
-			}
-		}
+		
 		
 	}
+
+	threadTerminal = false;
+	iskill = false;
+	VCFdepth = 0;
+	vcfAttacker = turnToMove;
+	Pos tps[225];
+	int tpc = genVCTAttackMove(tps);
+	future<void>vcfRoot = async(vcfthreadRoot,*this,tps,tpc);
+
 
 
 
@@ -633,6 +729,8 @@ pair<int, int> board::policy()
 
 	if (values[0] < -10000) {//下一步提前判断输
 		cout << "quick loss" << endl;
+		terminal = true;
+		threadTerminal = true;
 		return poss[0];
 	}
 	
@@ -667,7 +765,10 @@ pair<int, int> board::policy()
 
 
 #ifdef TIME_CONTROL
-			if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) terminal = true;
+			if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) {
+				threadTerminal = true;
+				terminal = true;
+			}
 			if (terminal)break;
 #endif
 			//cout <<"pol:("<< poss[rc].first << " , "<<poss[rc].second << ") , eval:" << t <<endl;
@@ -695,6 +796,8 @@ pair<int, int> board::policy()
 		bestVelue = curmax;
 		layBest = best;
 		memcpy(laySeq, poss, sizeof(Pos) * count);
+
+		
 		//输出层结果
 #ifdef DEBUG_POLICY
 		cout << "depth = " << depth << "-" << reachMaxDepth << ", eval = " << bestVelue << ", best = (" << 
@@ -712,6 +815,8 @@ pair<int, int> board::policy()
 #endif // STD_OUT_FORM
 			<< ")" << ", time = " << clock() - steptime << endl;
 #endif // DEBUG_POLICY
+		
+
 
 		if (bestVelue > 10000) {
 			depth++;break;
@@ -747,9 +852,36 @@ pair<int, int> board::policy()
 		*/
 	}
 
+		threadTerminal = true;
+		terminal = true;
+
+	//ab有杀走ab
+	if (bestVelue > 10000 || bestVelue<-10000) {
+
+	}else {//ab无杀等待VCT
+		while (true)
+		{
+			if (clock() - TIMEBEGIN > MAX_SEARCH_TIME_MS) {
+				threadTerminal = true;
+				terminal = true;
+				break;
+			}
+			_sleep(100);
+		}
+	}
 
 
+	if (bestVelue < 10000 && iskill) {//ab无杀且vct算到杀
+		for (int i = 0;i < tpc;i++) {
+			if (VCFans[i] > 10000) {
+				cout << "thread VCT kill" << endl;
 
+
+				return tps[i];
+			}
+		}
+
+	}
 
 
 
@@ -796,6 +928,11 @@ pair<int, int> board::policy()
 				<< ")" << endl;
 		}
 #endif // STEP5_OUT_N
+
+
+
+	
+
 
 
 	return bestMove;
@@ -945,16 +1082,13 @@ int board::getScoreOneStep() {
 int board::VCTSearch() {
 	searchNode++;
 	bool debug =0;
-	if(debug) cout << *this << endl;
+	//cout << *this << endl;
 	//step 1: 提前胜负判断
 	int winFlag = quickWinCheck();
 	if (winFlag)
 		return MAX_INT * winFlag;
 
-
 	//step 2: 深度限制
-
-
 	if (VCFdepth >= MAX_VCT_DEPTH) {
 		return 0;
 	}
@@ -962,74 +1096,57 @@ int board::VCTSearch() {
 	//step 3：查找置换表
 	Move* tte = TT.find(zobristKey);
 
-	if (tte  && tte->valueType == value_type_VCF) {//命中置换表
-
+	if (tte  && tte->valueType == value_type_VCF && tte->value>10000) {//命中置换表，值有效，为必胜点
 		return tte->value;
 	}
+
 	VCFdepth++;
+
+	//step 4：循环着点
 	Pos moves[225];
 	Pos best;
 	int winlossFlag = 0;
 	if (turnToMove == vcfAttacker) {//进攻方走法
 
 		int mc = genVCTAttackMove(moves);
-
 		int rc = 0;
-
 		while (mc--) {
+			//int t = clock();
 			move(moves[rc]);
-			//if(debug) cout << *this << endl;
-			//if (
-			//	chess[6][14]==-1 &&
-			//	
-			//	chess[5][13] == 1
-
-
-			//	) {
-
-			//	int aa = 1;
-			//}
-
 			winlossFlag = -VCTSearch();
-
-
-				if (VCFdepth == 1) {
-					cout << *this << endl;
-					int aa = 1;
-				}
 			undo();
-
-
-
+			
 			if (winlossFlag > 10000) {//进攻方有一个点能杀即可
-
+				//if(VCFdepth==1)cout << "time: " << clock() - t << endl;
 				best = moves[rc];
+				break;
+			}
+			if (terminal || threadTerminal) {
+				return 0;//未找到必杀点直接返回0
 				break;
 			}
 			rc++;
 		}
-
-
 	}
 	else {//防守方走法
-		winlossFlag = MIN_INT;
-		int mc = genVCTDefendMove(moves);
-
+		winlossFlag = MIN_INT;//无防守点为输
+		int mc = genVCTDefendMove(moves);//防守点是所有的点
 		int rc = 0;
-
 		while (mc--) {
 			move(moves[rc]);
-			if(debug)cout << *this << endl;
+
 			winlossFlag = -VCTSearch();
 
 			undo();
 			if (winlossFlag > -10000) {//防守方有一个点能防守即可
-				if (VCFdepth == 2) {
-					//cout << *this << endl;
-					int aa = 1;
-				}
 				break;
 			}
+
+			if (terminal || threadTerminal) {
+				return 0;//未搜完不能断定胜负
+				break;
+			}
+
 			rc++;
 		}
 	}
@@ -1038,14 +1155,12 @@ int board::VCTSearch() {
 		tte = new Move();
 
 	tte->value = winlossFlag;
-	tte->turn = turnToMove;
 	TT.AddItem(zobristKey, tte);
 
-	//置换表保存
-	if (vcfAttacker == turnToMove && winlossFlag > 10000) {
-
+	//step 5: 置换表保存
+	if (vcfAttacker == turnToMove && winlossFlag > 10000) {//只保存必胜点
 		tte->bestMove = best;
-		tte->valueType = value_type_VCF;
+		tte->valueType = value_type_VCF;//值有效
 	}
 
 

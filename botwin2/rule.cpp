@@ -162,6 +162,7 @@ void game() {
 
 	//³õÊ¼»¯×ÖµäÊ÷
 	strTree::initRoots();
+	initZobrist();
 	//shapeHashTable.init();
 	timereadtree = 0;
 	timeshape4 = 0;
@@ -169,12 +170,14 @@ void game() {
 	shapeHashTable.unHitCount = 0;
 
 	board mb;
+	
 
 #ifdef TIMER_CLOCK
 	future<void> ttt = async(timerThread);
 #endif
 
 	
+	board mmb = mb;	
 	char r = '0';
 	int h = 0;
 	while (true)
@@ -309,6 +312,10 @@ void game() {
 			cin >> h;
 			if (h <= 0 || h > 15) {
 				cout << "invalid int" << endl;
+				continue;
+			}
+			if (mb.chess[r - 'A'][15 - h]) {
+				cout << "exist" << endl;
 				continue;
 			}
 			

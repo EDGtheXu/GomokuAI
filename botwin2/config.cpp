@@ -40,17 +40,17 @@ const int VALUE_GDEFAULT[SHAPE_TYPES]{	//	权重
 // 
 //总体设置
 int START_DEPTH =1;
-int MAX_DEPTH = 15;
+int MAX_DEPTH = 19;
 
 int range = 2;
 
 int LC_DELTA = VALUE_GDEFAULT[H3]*2;//坏点与最大估值的差值
 int LC_LOW = -10000;//坏点必输值
 
-int LC_KEEP = 15;//LC保留分支数
-int TT_KEEP = 15;//置换表保留分支数
-int keepLen = 20;//最大保留分支数(按层递减)
-int keepLenMin = 10;//最小保留分支数
+int LC_KEEP = 25;//LC保留分支数
+int TT_KEEP = 25;//置换表保留分支数
+int keepLen = 35;//最大保留分支数(按层递减)
+int keepLenMin = 20;//最小保留分支数
 
 
 int MAX_VCT_DEPTH = 17;//VCT可扩展层数
@@ -139,3 +139,15 @@ playerEnum operator-(playerEnum p) {
 
 
 U64 zobristInitRandom = random();
+U64 zobristArr[2][15][15]{ 0 };
+
+void initZobrist() {
+	for (int i = 0; i < 15; i++)
+		for (int j = 0; j < 15; j++)
+			zobristArr[0][i][j] = random();
+
+	for (int i = 0; i < 15; i++)
+		for (int j = 0; j < 15; j++)
+			zobristArr[1][i][j] = random();
+
+}

@@ -24,7 +24,7 @@
 
 
 #define DEBUG_BOTZONE
-//#define TIME_CONTROL
+#define TIME_CONTROL
 
 
 #define SWAP3				//ÈýÊÖ½»»»
@@ -156,5 +156,9 @@ class TransitionTable;
 
 extern hashTable shapeHashTable;
 extern TransitionTable TT;
+
+extern U64 zobristArr[2][15][15];
+
+void initZobrist();
 
 #endif // !CONFIG

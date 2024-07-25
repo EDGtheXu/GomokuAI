@@ -781,12 +781,12 @@ public:
 	void initZobrish() {
 		for (int i = 0; i < 15; i++)
 			for (int j = 0; j < 15; j++)
-				zobrist[0][i][j] = random();
+				zobrist[0][i][j] = zobristArr[0][i][j];
 
 		for (int i = 0; i < 15; i++)
 			for (int j = 0; j < 15; j++)
-				zobrist[1][i][j] = random();
-		zobristKey = random();
+				zobrist[1][i][j] = zobristArr[0][i][j];
+		zobristKey = zobristInitRandom;
 	}
 
 	void save(Pos* ps, int pcount, int v) {
